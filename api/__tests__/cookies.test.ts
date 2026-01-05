@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { setCookie, getCookie, clearCookie } from "../lib/cookies.ts";
 
 Deno.test("setCookie - creates cookie string with default options", () => {

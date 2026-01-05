@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { supabase } from "../lib/supabase.ts";
+import { supabase } from "../../../lib/supabase.ts";
 
 const app = new Hono();
 
@@ -41,7 +41,9 @@ app.get("/health/supabase", async (c) => {
 });
 
 app.post("/graphql", async (c) => {
-  return c.json({ message: "GraphQL endpoint - coming soon" });
+  return await Promise.resolve(
+    c.json({ message: "GraphQL endpoint - coming soon" })
+  );
 });
 
 app.notFound((c) => {

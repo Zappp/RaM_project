@@ -1,5 +1,6 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { authTypeDefs, authResolvers } from "./auth.ts";
+import { authTypeDefs } from "./auth.ts";
+import { authResolvers } from "../resolvers/auth.ts";
 
 const typeDefs = [authTypeDefs];
 
@@ -9,4 +10,6 @@ export const schema = makeExecutableSchema({
   typeDefs,
   resolvers,
 });
+
+export type { GraphQLContext } from "../lib/types.ts";
 

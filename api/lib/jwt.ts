@@ -1,10 +1,8 @@
 import { supabase } from "./supabase.ts";
+import type { GraphQLContext } from "./types.ts";
 
 interface CachedUser {
-  user: {
-    id: string;
-    email?: string;
-  };
+  user: GraphQLContext["user"];
   expiresAt: number;
 }
 
@@ -24,7 +22,7 @@ setInterval(cleanupCache, 60 * 1000);
 
 export async function validateJWT(
   token: string
-): Promise<{ id: string; email?: string } | null> {
+): Promise<GraphQLContext["user"]> {
   const cached = cache.get(token);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.user;

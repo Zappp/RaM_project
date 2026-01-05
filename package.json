@@ -7,7 +7,7 @@
     "install:api": "cd api && deno cache --node-modules-dir --lock deno.lock --reload supabase/functions/graphql/index.ts",
     "dev:api": "cd api && deno task dev",
     "build:api": "cd api && supabase functions deploy graphql",
-    "test:api": "cd api && deno test",
+    "test:api": "cd api && deno task test",
     "check:api": "cd api && deno task check"
   },
   "engines": {

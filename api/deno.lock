@@ -1,6 +1,8 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@std/assert@0.208.0": "0.208.0",
+    "jsr:@std/fmt@0.208": "0.208.0",
     "jsr:@supabase/functions-js@^0.0.0-automated": "0.0.0-jsr-test.1",
     "jsr:@supabase/functions-js@^0.0.0-jsr-test.1": "0.0.0-jsr-test.1",
     "jsr:@supabase/supabase-js@^2.89.0": "2.89.0",
@@ -14,10 +16,20 @@
     "npm:@supabase/realtime-js@^2.89.0": "2.89.0",
     "npm:@supabase/storage-js@2.89.0": "2.89.0",
     "npm:@supabase/storage-js@^2.89.0": "2.89.0",
+    "npm:graphql-tag@^2.12.6": "2.12.6_graphql@16.12.0",
     "npm:graphql-yoga@^5.18.0": "5.18.0_graphql@16.12.0",
     "npm:openai@^4.52.5": "4.104.0"
   },
   "jsr": {
+    "@std/assert@0.208.0": {
+      "integrity": "1aa06be08916efe062e40c0948e95034cea4627355dcb32a5e1d4e52786ace7c",
+      "dependencies": [
+        "jsr:@std/fmt"
+      ]
+    },
+    "@std/fmt@0.208.0": {
+      "integrity": "06584c97a1a7b934e8de185c45a595d8234c5312e51e61cb05650af4cb8eb65f"
+    },
     "@supabase/functions-js@0.0.0-jsr-test.1": {
       "integrity": "b1b37924af1f0011b4753201e1585a37b030e996c6682492e02575eb27d902b2",
       "dependencies": [
@@ -350,6 +362,13 @@
     "gopd@1.2.0": {
       "integrity": "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg=="
     },
+    "graphql-tag@2.12.6_graphql@16.12.0": {
+      "integrity": "sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==",
+      "dependencies": [
+        "graphql",
+        "tslib"
+      ]
+    },
     "graphql-yoga@5.18.0_graphql@16.12.0": {
       "integrity": "sha512-xFt1DVXS1BZ3AvjnawAGc5OYieSe56WuQuyk3iEpBwJ3QDZJWQGLmU9z/L5NUZ+pUcyprsz/bOwkYIV96fXt/g==",
       "dependencies": [
@@ -545,6 +564,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/assert@0.208.0",
       "jsr:@supabase/functions-js@^0.0.0-jsr-test.1",
       "jsr:@supabase/supabase-js@^2.89.0",
       "npm:@graphql-tools/schema@^10.0.30",
@@ -553,6 +573,7 @@
       "npm:@supabase/postgrest-js@^2.89.0",
       "npm:@supabase/realtime-js@^2.89.0",
       "npm:@supabase/storage-js@^2.89.0",
+      "npm:graphql-tag@^2.12.6",
       "npm:graphql-yoga@^5.18.0"
     ]
   }
