@@ -1,0 +1,25 @@
+{
+  "name": "ram-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rick & Morty app with React, Supabase, and GraphQL",
+  "workspaces": [
+    "frontend",
+    "api"
+  ],
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:api": "cd api && supabase functions serve",
+    "build:frontend": "cd frontend && npm run build",
+    "build:api": "cd api && supabase functions deploy",
+    "test:frontend": "cd frontend && npm run test",
+    "test:api": "cd api && deno test",
+    "test:e2e": "cd e2e && npm run test",
+    "codegen": "cd codegen && npm run codegen",
+    "docs": "cd docs && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
