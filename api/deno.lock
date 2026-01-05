@@ -15,7 +15,8 @@
     "npm:@supabase/realtime-js@^2.89.0": "2.89.0",
     "npm:@supabase/storage-js@2.89.0": "2.89.0",
     "npm:@supabase/storage-js@^2.89.0": "2.89.0",
-    "npm:graphql-yoga@^5.18.0": "5.18.0_graphql@16.12.0"
+    "npm:graphql-yoga@^5.18.0": "5.18.0_graphql@16.12.0",
+    "npm:zod@4": "4.3.5"
   },
   "jsr": {
     "@std/assert@0.208.0": {
@@ -270,6 +271,9 @@
     },
     "ws@8.18.3": {
       "integrity": "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="
+    },
+    "zod@4.3.5": {
+      "integrity": "sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g=="
     }
   },
   "remote": {
@@ -326,7 +330,8 @@
       "npm:@supabase/postgrest-js@^2.89.0",
       "npm:@supabase/realtime-js@^2.89.0",
       "npm:@supabase/storage-js@^2.89.0",
-      "npm:graphql-yoga@^5.18.0"
+      "npm:graphql-yoga@^5.18.0",
+      "npm:zod@4"
     ]
   }
 }

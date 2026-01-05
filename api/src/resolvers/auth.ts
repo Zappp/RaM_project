@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase.ts";
 import { setCookie, getCookie, clearCookie } from "@/lib/cookies.ts";
 import { validateJWT } from "@/lib/jwt.ts";
 import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
+import { env } from "@/lib/env.ts";
 import type { GraphQLContext } from "@/lib/types.ts";
 
 const AUTH_COOKIE_NAME = "auth-token";
@@ -25,11 +26,14 @@ export const authResolvers = {
         throw new AuthenticationError();
       }
 
-      return await Promise.resolve({
+      const { data: userData } = await supabase.auth.getUser();
+      
+      return {
         id: context.user.id,
         email: context.user.email || "",
         createdAt: new Date().toISOString(),
-      });
+        emailVerified: userData.user?.email_confirmed_at !== null || false,
+      };
     },
   },
   Mutation: {
@@ -51,6 +55,9 @@ export const authResolvers = {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${env.API_URL}/auth/callback`,
+        },
       });
 
       if (error) {
@@ -58,23 +65,30 @@ export const authResolvers = {
         throw new ValidationError(error.message);
       }
 
-      if (!data.user || !data.session) {
+      if (!data.user) {
         throw new ValidationError("Failed to create user");
       }
 
-      const token = data.session.access_token;
-      const cookieValue = setCookie(AUTH_COOKIE_NAME, token);
-      context.context.header("Set-Cookie", cookieValue);
+      const requiresEmailVerification = !data.session;
+      let token: string | null = null;
 
-      console.info(`User signed up: ${data.user.id}`);
+      if (data.session) {
+        token = data.session.access_token;
+        const cookieValue = setCookie(AUTH_COOKIE_NAME, token);
+        context.context.header("Set-Cookie", cookieValue);
+      }
+
+      console.info(`User signed up: ${data.user.id}${requiresEmailVerification ? " (email verification required)" : ""}`);
 
       return {
         user: {
           id: data.user.id,
           email: data.user.email || "",
           createdAt: data.user.created_at || new Date().toISOString(),
+          emailVerified: data.user.email_confirmed_at !== null,
         },
         token,
+        requiresEmailVerification,
       };
     },
 
@@ -114,8 +128,10 @@ export const authResolvers = {
           id: data.user.id,
           email: data.user.email || "",
           createdAt: data.user.created_at || new Date().toISOString(),
+          emailVerified: data.user.email_confirmed_at !== null,
         },
         token,
+        requiresEmailVerification: false,
       };
     },
 
@@ -134,6 +150,69 @@ export const authResolvers = {
       context.context.header("Set-Cookie", cookieValue);
 
       return true;
+    },
+
+    resendVerificationEmail: async (
+      _: unknown,
+      args: { email: string },
+      context: GraphQLContext
+    ) => {
+      const { email } = args;
+
+      if (!email) {
+        throw new ValidationError("Email is required");
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${env.API_URL}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        console.error("Resend verification email error:", error.message);
+        throw new ValidationError(error.message);
+      }
+
+      console.info(`Verification email resent to: ${email}`);
+
+      return true;
+    },
+
+    verifyEmail: async (
+      _: unknown,
+      args: { token: string },
+      context: GraphQLContext
+    ) => {
+      const { token } = args;
+
+      if (!token) {
+        throw new ValidationError("Token is required");
+      }
+
+      const user = await validateJWT(token);
+
+      if (!user) {
+        throw new AuthenticationError("Invalid or expired token");
+      }
+
+      const cookieValue = setCookie(AUTH_COOKIE_NAME, token);
+      context.context.header("Set-Cookie", cookieValue);
+
+      console.info(`User email verified and logged in: ${user.id}`);
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email || "",
+          createdAt: new Date().toISOString(),
+          emailVerified: true,
+        },
+        token,
+        requiresEmailVerification: false,
+      };
     },
   },
 };

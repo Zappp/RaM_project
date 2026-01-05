@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { createGraphQLServer } from "@/lib/graphql.ts";
 import { Context } from "hono";
+import { env } from "@/lib/env.ts";
 
 function createMockContext(cookieHeader?: string): Context {
   const headers = new Headers();
@@ -12,7 +13,7 @@ function createMockContext(cookieHeader?: string): Context {
 
   const req = {
     header: (name: string) => headers.get(name) || undefined,
-    url: "http://localhost:8000/graphql",
+    url: `${env.API_URL}/graphql`,
     method: "POST",
     raw: {
       clone: () => ({
@@ -44,7 +45,7 @@ Deno.test("GraphQL server - handles query", async () => {
   const yoga = createGraphQLServer();
   const mockContext = createMockContext();
 
-  const request = new Request("http://localhost:8000/graphql", {
+  const request = new Request(`${env.API_URL}/graphql`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -69,7 +70,7 @@ Deno.test("GraphQL server - me query requires authentication", async () => {
   const yoga = createGraphQLServer();
   const mockContext = createMockContext();
 
-  const request = new Request("http://localhost:8000/graphql", {
+  const request = new Request(`${env.API_URL}/graphql`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -96,7 +97,7 @@ Deno.test("GraphQL server - me query requires authentication", async () => {
 Deno.test("GraphQL server - GraphiQL playground available", async () => {
   const yoga = createGraphQLServer();
 
-  const request = new Request("http://localhost:8000/graphql", {
+  const request = new Request(`${env.API_URL}/graphql`, {
     method: "GET",
     headers: {
       Accept: "text/html",

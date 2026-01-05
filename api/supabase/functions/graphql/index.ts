@@ -2,6 +2,7 @@ import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { supabase } from "@/lib/supabase.ts";
 import { createGraphQLServer } from "@/lib/graphql.ts";
+import { env } from "@/lib/env.ts";
 
 const app = new Hono();
 
@@ -17,29 +18,36 @@ app.use(
   })
 );
 
-app.get("/health", (context) => {
-  return context.json({ status: "ok", timestamp: new Date().toISOString() });
-});
+app.get("/auth/callback", async (context) => {
+  const token = context.req.query("token");
+  const type = context.req.query("type");
+  const redirectTo = env.FRONTEND_URL;
 
-app.get("/health/supabase", async (context) => {
+  if (!token) {
+    return context.redirect(`${redirectTo}/auth/error?message=Missing verification token`);
+  }
+
   try {
-    await supabase.auth.getSession();
+    if (type === "signup" || type === "email") {
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: "email",
+      });
 
-    return context.json({
-      status: "ok",
-      message: "Successfully connected to Supabase",
-      timestamp: new Date().toISOString(),
-    });
+      if (error || !data.session || !data.user) {
+        console.error("Email verification error:", error?.message);
+        return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent(error?.message || "Verification failed")}`);
+      }
+
+      console.info(`User email verified: ${data.user.id}`);
+
+      return context.redirect(`${redirectTo}/auth/verify?token=${data.session.access_token}`);
+    }
+
+    return context.redirect(`${redirectTo}/auth/error?message=Invalid verification type`);
   } catch (error) {
-    console.error("Supabase connection test failed:", error);
-    return context.json(
-      {
-        status: "error",
-        message: "Supabase connection test failed",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      500
-    );
+    console.error("Callback error:", error);
+    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent(error instanceof Error ? error.message : "Unknown error")}`);
   }
 });
 
@@ -73,7 +81,7 @@ app.onError((err, context) => {
 
 Deno.serve(
   {
-    port: parseInt(Deno.env.get("PORT") || "8000"),
+    port: env.PORT,
     onListen: ({ port }) => {
       console.log(`Server running on port ${port}`);
     },
