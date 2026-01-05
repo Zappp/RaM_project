@@ -10,10 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// Client for user operations (uses anon key, respects RLS)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Admin client for admin operations (uses service role key, bypasses RLS)
 export const supabaseAdmin = supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: {
