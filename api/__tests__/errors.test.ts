@@ -6,7 +6,7 @@ import {
   ValidationError,
   NotFoundError,
   formatGraphQLError,
-} from "../lib/errors.ts";
+} from "@/lib/errors.ts";
 
 Deno.test("GraphQLError - creates error with code and status", () => {
   const error = new GraphQLError("Test error", "TEST_CODE", 400);

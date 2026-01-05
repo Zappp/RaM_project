@@ -1,8 +1,11 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { supabase } from "../../../lib/supabase.ts";
+import { supabase } from "@/lib/supabase.ts";
+import { createGraphQLServer } from "@/lib/graphql.ts";
 
 const app = new Hono();
+
+const yoga = createGraphQLServer();
 
 app.use(
   "*",
@@ -14,22 +17,22 @@ app.use(
   })
 );
 
-app.get("/health", (c) => {
-  return c.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/health", (context) => {
+  return context.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.get("/health/supabase", async (c) => {
+app.get("/health/supabase", async (context) => {
   try {
-    const { data, error } = await supabase.auth.getSession();
+    await supabase.auth.getSession();
 
-    return c.json({
+    return context.json({
       status: "ok",
       message: "Successfully connected to Supabase",
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Supabase connection test failed:", error);
-    return c.json(
+    return context.json(
       {
         status: "error",
         message: "Supabase connection test failed",
@@ -40,19 +43,32 @@ app.get("/health/supabase", async (c) => {
   }
 });
 
-app.post("/graphql", async (c) => {
-  return await Promise.resolve(
-    c.json({ message: "GraphQL endpoint - coming soon" })
-  );
+app.all("/graphql", async (context) => {
+  const url = new URL(context.req.url);
+  url.pathname = "/graphql";
+
+  const request = new Request(url.toString(), {
+    method: context.req.method,
+    headers: context.req.header(),
+    body: context.req.method !== "GET" && context.req.method !== "HEAD"
+      ? await context.req.raw.clone().arrayBuffer()
+      : undefined,
+  });
+
+  (request as Request & { honoContext: Context }).honoContext = context;
+
+  const response = await yoga.fetch(request);
+
+  return response;
 });
 
-app.notFound((c) => {
-  return c.json({ error: "Not found" }, 404);
+app.notFound((context) => {
+  return context.json({ error: "Not found" }, 404);
 });
 
-app.onError((err, c) => {
+app.onError((err, context) => {
   console.error("Error:", err);
-  return c.json({ error: "Internal server error" }, 500);
+  return context.json({ error: "Internal server error" }, 500);
 });
 
 Deno.serve(

@@ -1,7 +1,7 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { Context } from "hono";
-import { authResolvers, createAuthContext } from "../resolvers/auth.ts";
-import { AuthenticationError, ValidationError } from "../lib/errors.ts";
+import { authResolvers, createAuthContext } from "@/resolvers/auth.ts";
+import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
 
 function createMockContext(cookieHeader?: string): Context & { _responseHeaders: Headers } {
   const headers = new Headers();
@@ -15,7 +15,7 @@ function createMockContext(cookieHeader?: string): Context & { _responseHeaders:
     header: (name: string) => headers.get(name) || undefined,
   };
 
-  const c = {
+  const context = {
     req,
     header: (name: string, value?: string) => {
       if (value !== undefined) {
@@ -31,19 +31,19 @@ function createMockContext(cookieHeader?: string): Context & { _responseHeaders:
     _responseHeaders: responseHeaders,
   } as unknown as Context & { _responseHeaders: Headers };
 
-  return c;
+  return context;
 }
 
 Deno.test("createAuthContext - returns null user when no cookie", async () => {
-  const c = createMockContext();
-  const context = await createAuthContext(c);
+  const mockContext = createMockContext();
+  const context = await createAuthContext(mockContext);
 
   assertEquals(context.user, null);
 });
 
 Deno.test("authResolvers.Query.me - throws AuthenticationError when not authenticated", async () => {
-  const c = createMockContext();
-  const context = await createAuthContext(c);
+  const mockContext = createMockContext();
+  const context = await createAuthContext(mockContext);
 
   await assertRejects(
     async () => {
@@ -55,8 +55,8 @@ Deno.test("authResolvers.Query.me - throws AuthenticationError when not authenti
 });
 
 Deno.test("authResolvers.Mutation.signup - throws ValidationError for missing email", async () => {
-  const c = createMockContext();
-  const context = await createAuthContext(c);
+  const mockContext = createMockContext();
+  const context = await createAuthContext(mockContext);
 
   await assertRejects(
     async () => {
@@ -67,8 +67,8 @@ Deno.test("authResolvers.Mutation.signup - throws ValidationError for missing em
 });
 
 Deno.test("authResolvers.Mutation.signup - throws ValidationError for short password", async () => {
-  const c = createMockContext();
-  const context = await createAuthContext(c);
+  const mockContext = createMockContext();
+  const context = await createAuthContext(mockContext);
 
   await assertRejects(
     async () => {
@@ -80,8 +80,8 @@ Deno.test("authResolvers.Mutation.signup - throws ValidationError for short pass
 });
 
 Deno.test("authResolvers.Mutation.login - throws ValidationError for missing email", async () => {
-  const c = createMockContext();
-  const context = await createAuthContext(c);
+  const mockContext = createMockContext();
+  const context = await createAuthContext(mockContext);
 
   await assertRejects(
     async () => {
@@ -92,13 +92,13 @@ Deno.test("authResolvers.Mutation.login - throws ValidationError for missing ema
 });
 
 Deno.test("authResolvers.Mutation.logout - returns true and clears cookie", async () => {
-  const c = createMockContext("auth-token=test-token");
-  const context = await createAuthContext(c);
+  const mockContext = createMockContext("auth-token=test-token");
+  const context = await createAuthContext(mockContext);
 
   const result = await authResolvers.Mutation.logout(undefined, undefined, context);
 
   assertEquals(result, true);
-  const setCookieHeader = c._responseHeaders.get("Set-Cookie");
+  const setCookieHeader = mockContext._responseHeaders.get("Set-Cookie");
   assertEquals(setCookieHeader?.includes("auth-token="), true);
   assertEquals(setCookieHeader?.includes("Max-Age=0"), true);
 });

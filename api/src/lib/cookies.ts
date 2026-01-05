@@ -47,8 +47,8 @@ export function getCookie(cookieHeader: string | null, name: string): string | n
     return null;
   }
 
-  const cookies = cookieHeader.split(";").map((c) => c.trim());
-  const cookie = cookies.find((c) => c.startsWith(`${name}=`));
+  const cookies = cookieHeader.split(";").map((cookie) => cookie.trim());
+  const cookie = cookies.find((cookie) => cookie.startsWith(`${name}=`));
 
   if (!cookie) {
     return null;

@@ -1,6 +1,4 @@
-import { gql } from "graphql-tag";
-
-export const authTypeDefs = gql`
+export const authTypeDefs = `
   type User {
     id: ID!
     email: String!

@@ -1,16 +1,14 @@
 import { Context } from "hono";
-import { supabase } from "../lib/supabase.ts";
-import { setCookie, getCookie, clearCookie } from "../lib/cookies.ts";
-import { validateJWT } from "../lib/jwt.ts";
-import { AuthenticationError, ValidationError } from "../lib/errors.ts";
-import type { GraphQLContext } from "../lib/types.ts";
+import { supabase } from "@/lib/supabase.ts";
+import { setCookie, getCookie, clearCookie } from "@/lib/cookies.ts";
+import { validateJWT } from "@/lib/jwt.ts";
+import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
+import type { GraphQLContext } from "@/lib/types.ts";
 
 const AUTH_COOKIE_NAME = "auth-token";
 
-async function getCurrentUser(
-  c: Context
-): Promise<GraphQLContext["user"]> {
-  const cookieHeader = c.req.header("Cookie") || null;
+async function getCurrentUser(context: Context): Promise<GraphQLContext["user"]> {
+  const cookieHeader = context.req.header("Cookie") || null;
   const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
 
   if (!token) {
@@ -66,7 +64,7 @@ export const authResolvers = {
 
       const token = data.session.access_token;
       const cookieValue = setCookie(AUTH_COOKIE_NAME, token);
-      context.c.header("Set-Cookie", cookieValue);
+      context.context.header("Set-Cookie", cookieValue);
 
       console.info(`User signed up: ${data.user.id}`);
 
@@ -79,6 +77,7 @@ export const authResolvers = {
         token,
       };
     },
+
     login: async (
       _: unknown,
       args: { email: string; password: string },
@@ -106,7 +105,7 @@ export const authResolvers = {
 
       const token = data.session.access_token;
       const cookieValue = setCookie(AUTH_COOKIE_NAME, token);
-      context.c.header("Set-Cookie", cookieValue);
+      context.context.header("Set-Cookie", cookieValue);
 
       console.info(`User logged in: ${data.user.id}`);
 
@@ -119,8 +118,9 @@ export const authResolvers = {
         token,
       };
     },
+
     logout: async (_: unknown, __: unknown, context: GraphQLContext) => {
-      const cookieHeader = context.c.req.header("Cookie") || null;
+      const cookieHeader = context.context.req.header("Cookie") || null;
       const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
 
       if (token) {
@@ -131,14 +131,14 @@ export const authResolvers = {
       }
 
       const cookieValue = clearCookie(AUTH_COOKIE_NAME);
-      context.c.header("Set-Cookie", cookieValue);
+      context.context.header("Set-Cookie", cookieValue);
 
       return true;
     },
   },
 };
 
-export async function createAuthContext(c: Context): Promise<GraphQLContext> {
-  const user = await getCurrentUser(c);
-  return { c, user };
+export async function createAuthContext(context: Context): Promise<GraphQLContext> {
+  const user = await getCurrentUser(context);
+  return { context, user };
 }

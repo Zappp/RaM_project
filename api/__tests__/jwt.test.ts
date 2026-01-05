@@ -6,7 +6,7 @@ Deno.test({
     Deno.env.set("SUPABASE_URL", "https://test.supabase.co");
     Deno.env.set("SUPABASE_ANON_KEY", "test-key");
 
-    const { validateJWT } = await import("../lib/jwt.ts");
+    const { validateJWT } = await import("@/lib/jwt.ts");
     const result = await validateJWT("invalid-token");
     assertEquals(result, null);
   },
