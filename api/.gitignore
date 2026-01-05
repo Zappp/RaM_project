@@ -1,0 +1,11 @@
+# Environment (using root .env)
+# .env files are managed at root level
+
+# Deno
+.deno/
+node_modules/
+
+# Logs
+*.log
+
+

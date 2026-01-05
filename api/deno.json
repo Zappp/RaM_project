@@ -1,0 +1,19 @@
+{
+  "imports": {
+    "@supabase/functions-js": "jsr:@supabase/functions-js@^0.0.0-jsr-test.1",
+    "@supabase/supabase-js": "jsr:@supabase/supabase-js@^2.89.0",
+    "hono": "https://deno.land/x/hono@v3.11.7/mod.ts",
+    "hono/cors": "https://deno.land/x/hono@v3.11.7/middleware/cors/index.ts",
+    "@supabase/realtime-js": "npm:@supabase/realtime-js@^2.89.0",
+    "@supabase/postgrest-js": "npm:@supabase/postgrest-js@^2.89.0",
+    "@supabase/storage-js": "npm:@supabase/storage-js@^2.89.0",
+    "@supabase/auth-js": "npm:@supabase/auth-js@^2.89.0",
+    "graphql-yoga": "npm:graphql-yoga@^5.18.0",
+    "@graphql-tools/schema": "npm:@graphql-tools/schema@^10.0.30",
+    "@graphql-tools/utils": "npm:@graphql-tools/utils@^10.11.0"
+  },
+  "tasks": {
+    "dev": "deno run --watch --allow-net --allow-env --node-modules-dir --lock deno.lock --env-file ../.env supabase/functions/graphql/index.ts",
+    "check": "deno check --node-modules-dir --lock deno.lock supabase/functions/graphql/index.ts"
+  }
+}
