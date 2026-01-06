@@ -1,8 +1,8 @@
 export const authTypeDefs = `
   type User {
-    id: ID!
+    id: ID
     email: String!
-    createdAt: String!
+    createdAt: String
     emailVerified: Boolean!
   }
 
@@ -20,7 +20,5 @@ export const authTypeDefs = `
     signup(email: String!, password: String!): AuthPayload!
     login(email: String!, password: String!): AuthPayload!
     logout: Boolean!
-    resendVerificationEmail(email: String!): Boolean!
-    verifyEmail(token: String!): AuthPayload!
   }
 `;

@@ -8,7 +8,9 @@ import type { GraphQLContext } from "@/lib/types.ts";
 
 const AUTH_COOKIE_NAME = "auth-token";
 
-async function getCurrentUser(context: Context): Promise<GraphQLContext["user"]> {
+async function getCurrentUser(
+  context: Context
+): Promise<GraphQLContext["user"]> {
   const cookieHeader = context.req.header("Cookie") || null;
   const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
 
@@ -26,8 +28,15 @@ export const authResolvers = {
         throw new AuthenticationError();
       }
 
-      const { data: userData } = await supabase.auth.getUser();
-      
+      const cookieHeader = context.context.req.header("Cookie") || null;
+      const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
+
+      if (!token) {
+        throw new AuthenticationError();
+      }
+
+      const { data: userData } = await supabase.auth.getUser(token);
+
       return {
         id: context.user.id,
         email: context.user.email || "",
@@ -72,13 +81,20 @@ export const authResolvers = {
       const requiresEmailVerification = !data.session;
       let token: string | null = null;
 
-      if (data.session) {
+      if (data.session?.access_token) {
         token = data.session.access_token;
-        const cookieValue = setCookie(AUTH_COOKIE_NAME, token);
+        const cookieValue = setCookie(
+          AUTH_COOKIE_NAME,
+          data.session.access_token
+        );
         context.context.header("Set-Cookie", cookieValue);
       }
 
-      console.info(`User signed up: ${data.user.id}${requiresEmailVerification ? " (email verification required)" : ""}`);
+      console.info(
+        `User signed up: ${data.user.id}${
+          requiresEmailVerification ? " (email verification required)" : ""
+        }`
+      );
 
       return {
         user: {
@@ -151,73 +167,12 @@ export const authResolvers = {
 
       return true;
     },
-
-    resendVerificationEmail: async (
-      _: unknown,
-      args: { email: string },
-      context: GraphQLContext
-    ) => {
-      const { email } = args;
-
-      if (!email) {
-        throw new ValidationError("Email is required");
-      }
-
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
-        options: {
-          emailRedirectTo: `${env.API_URL}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        console.error("Resend verification email error:", error.message);
-        throw new ValidationError(error.message);
-      }
-
-      console.info(`Verification email resent to: ${email}`);
-
-      return true;
-    },
-
-    verifyEmail: async (
-      _: unknown,
-      args: { token: string },
-      context: GraphQLContext
-    ) => {
-      const { token } = args;
-
-      if (!token) {
-        throw new ValidationError("Token is required");
-      }
-
-      const user = await validateJWT(token);
-
-      if (!user) {
-        throw new AuthenticationError("Invalid or expired token");
-      }
-
-      const cookieValue = setCookie(AUTH_COOKIE_NAME, token);
-      context.context.header("Set-Cookie", cookieValue);
-
-      console.info(`User email verified and logged in: ${user.id}`);
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email || "",
-          createdAt: new Date().toISOString(),
-          emailVerified: true,
-        },
-        token,
-        requiresEmailVerification: false,
-      };
-    },
   },
 };
 
-export async function createAuthContext(context: Context): Promise<GraphQLContext> {
+export async function createAuthContext(
+  context: Context
+): Promise<GraphQLContext> {
   const user = await getCurrentUser(context);
   return { context, user };
 }

@@ -1,8 +1,9 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { supabase } from "@/lib/supabase.ts";
 import { createGraphQLServer } from "@/lib/graphql.ts";
 import { env } from "@/lib/env.ts";
+import { supabase } from "@/lib/supabase.ts";
+import { setCookie } from "@/lib/cookies.ts";
 
 const app = new Hono();
 
@@ -11,43 +12,50 @@ const yoga = createGraphQLServer();
 app.use(
   "*",
   cors({
-    origin: "*", // TODO: Configure proper origins in production
+    origin: [env.FRONTEND_URL],
     credentials: true,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
 );
 
 app.get("/auth/callback", async (context) => {
-  const token = context.req.query("token");
-  const type = context.req.query("type");
+  const code = context.req.query("code");
+  const error = context.req.query("error");
   const redirectTo = env.FRONTEND_URL;
 
-  if (!token) {
-    return context.redirect(`${redirectTo}/auth/error?message=Missing verification token`);
+  if (error) {
+    console.error("Auth callback error:", error);
+    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Authentication failed")}`);
+  }
+
+  if (!code) {
+    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Missing verification code")}`);
   }
 
   try {
-    if (type === "signup" || type === "email") {
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: token,
-        type: "email",
-      });
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
-      if (error || !data.session || !data.user) {
-        console.error("Email verification error:", error?.message);
-        return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent(error?.message || "Verification failed")}`);
-      }
-
-      console.info(`User email verified: ${data.user.id}`);
-
-      return context.redirect(`${redirectTo}/auth/verify?token=${data.session.access_token}`);
+    if (exchangeError) {
+      console.error("Code exchange error:", exchangeError.message);
+      return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Verification failed")}`);
     }
 
-    return context.redirect(`${redirectTo}/auth/error?message=Invalid verification type`);
+    if (!data.session) {
+      console.error("No session returned from code exchange");
+      return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Verification failed")}`);
+    }
+
+    console.info(`User email verified: ${data.user?.id}`);
+
+    const authCookie = setCookie("auth-token", data.session.access_token);
+    const redirectResponse = context.redirect(`${redirectTo}/auth/verify?success=true`);
+    redirectResponse.headers.set("Set-Cookie", authCookie);
+
+    return redirectResponse;
   } catch (error) {
     console.error("Callback error:", error);
-    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent(error instanceof Error ? error.message : "Unknown error")}`);
+    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Verification failed")}`);
   }
 });
 
