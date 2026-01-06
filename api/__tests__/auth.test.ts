@@ -1,6 +1,7 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { Context } from "hono";
-import { authResolvers, createAuthContext } from "@/resolvers/auth.ts";
+import { authResolvers } from "@/resolvers/auth.ts";
+import { createAuthContext } from "@/lib/graphql.ts";
 import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
 
 function createMockContext(cookieHeader?: string): Context & { _responseHeaders: Headers } {

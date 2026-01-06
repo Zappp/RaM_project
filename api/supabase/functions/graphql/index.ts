@@ -22,15 +22,32 @@ app.use(
 app.get("/auth/callback", async (context) => {
   const code = context.req.query("code");
   const error = context.req.query("error");
-  const redirectTo = env.FRONTEND_URL;
 
   if (error) {
     console.error("Auth callback error:", error);
-    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Authentication failed")}`);
+    return context.json(
+      {
+        data: null,
+        error: {
+          code: "AUTH_CALLBACK_ERROR",
+          message: "Authentication failed",
+        },
+      },
+      400
+    );
   }
 
   if (!code) {
-    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Missing verification code")}`);
+    return context.json(
+      {
+        data: null,
+        error: {
+          code: "MISSING_VERIFICATION_CODE",
+          message: "Missing verification code",
+        },
+      },
+      400
+    );
   }
 
   try {
@@ -38,24 +55,63 @@ app.get("/auth/callback", async (context) => {
 
     if (exchangeError) {
       console.error("Code exchange error:", exchangeError.message);
-      return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Verification failed")}`);
+      return context.json(
+        {
+          data: null,
+          error: {
+            code: "CODE_EXCHANGE_FAILED",
+            message: "Verification failed",
+          },
+        },
+        400
+      );
     }
 
     if (!data.session) {
       console.error("No session returned from code exchange");
-      return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Verification failed")}`);
+      return context.json(
+        {
+          data: null,
+          error: {
+            code: "NO_SESSION_RETURNED",
+            message: "Verification failed",
+          },
+        },
+        400
+      );
     }
 
     console.info(`User email verified: ${data.user?.id}`);
 
     const authCookie = setCookie("auth-token", data.session.access_token);
-    const redirectResponse = context.redirect(`${redirectTo}/auth/verify?success=true`);
-    redirectResponse.headers.set("Set-Cookie", authCookie);
+    const response = context.json(
+      {
+        data: {
+          user: {
+            id: data.user?.id,
+            email: data.user?.email,
+          },
+          message: "Email verified successfully",
+        },
+        error: null,
+      },
+      200
+    );
+    response.headers.set("Set-Cookie", authCookie);
 
-    return redirectResponse;
+    return response;
   } catch (error) {
     console.error("Callback error:", error);
-    return context.redirect(`${redirectTo}/auth/error?message=${encodeURIComponent("Verification failed")}`);
+    return context.json(
+      {
+        data: null,
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Verification failed",
+        },
+      },
+      500
+    );
   }
 });
 
@@ -101,12 +157,30 @@ app.all("/graphql", async (context) => {
 });
 
 app.notFound((context) => {
-  return context.json({ error: "Not found" }, 404);
+  return context.json(
+    {
+      data: null,
+      error: {
+        code: "NOT_FOUND",
+        message: "Not found",
+      },
+    },
+    404
+  );
 });
 
 app.onError((err, context) => {
   console.error("Error:", err);
-  return context.json({ error: "Internal server error" }, 500);
+  return context.json(
+    {
+      data: null,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Internal server error",
+      },
+    },
+    500
+  );
 });
 
 Deno.serve(

@@ -156,13 +156,14 @@ export const authResolvers = {
       const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
       const cookieValue = clearCookie(AUTH_COOKIE_NAME);
 
+      context.context.header("Set-Cookie", cookieValue);
+
       if (token) {
         try {
           const user = await validateJWT(token);
           if (user) {
             try {
               const { error } = await supabase.auth.admin.signOut(token);
-              context.context.header("Set-Cookie", cookieValue);
               if (error) {
                 console.error("Supabase signout error:", error.message);
               } else {
