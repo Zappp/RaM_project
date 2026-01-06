@@ -1,7 +1,7 @@
 import { createYoga } from "graphql-yoga";
 import { schema } from "@/schema/index.ts";
 import { formatGraphQLError } from "@/lib/errors.ts";
-import type { GraphQLContext } from "@/lib/types.ts";
+import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import type { Context } from "hono";
 import { getCurrentUser } from "../resolvers/auth.ts";
 

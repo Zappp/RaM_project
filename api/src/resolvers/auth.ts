@@ -4,9 +4,8 @@ import { setCookie, getCookie, clearCookie } from "@/lib/cookies.ts";
 import { validateJWT } from "@/lib/jwt.ts";
 import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
 import { env } from "@/lib/env.ts";
-import type { GraphQLContext } from "@/lib/types.ts";
-
-const AUTH_COOKIE_NAME = "auth-token";
+import type { GraphQLContext } from "@/lib/types/graphql.ts";
+import { AUTH_COOKIE_NAME } from "@/lib/constants.ts";
 
 export async function getCurrentUser(
   context: Context

@@ -1,10 +1,4 @@
-interface CookieOptions {
-  httpOnly?: boolean;
-  secure?: boolean;
-  sameSite?: "Strict" | "Lax" | "None";
-  maxAge?: number;
-  path?: string;
-}
+import type { CookieOptions } from "./types/cookie.ts";
 
 export function setCookie(
   name: string,

@@ -1,10 +1,6 @@
 import { supabase } from "./supabase.ts";
-import type { GraphQLContext } from "./types.ts";
-
-interface CachedUser {
-  user: GraphQLContext["user"];
-  expiresAt: number;
-}
+import type { GraphQLContext } from "./types/graphql.ts";
+import type { CachedUser } from "./types/auth.ts";
 
 const cache = new Map<string, CachedUser>();
 const CACHE_TTL_MS = 5 * 60 * 1000;
