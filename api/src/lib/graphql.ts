@@ -1,9 +1,16 @@
 import { createYoga } from "graphql-yoga";
 import { schema } from "@/schema/index.ts";
-import { createAuthContext } from "@/resolvers/auth.ts";
 import { formatGraphQLError } from "@/lib/errors.ts";
 import type { GraphQLContext } from "@/lib/types.ts";
 import type { Context } from "hono";
+import { getCurrentUser } from "../resolvers/auth.ts";
+
+export async function createAuthContext(
+  context: Context
+): Promise<GraphQLContext> {
+  const user = await getCurrentUser(context);
+  return { context, user };
+}
 
 export function createGraphQLServer() {
   return createYoga({

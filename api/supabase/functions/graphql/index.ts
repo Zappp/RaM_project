@@ -63,6 +63,15 @@ app.all("/graphql", async (context) => {
   const url = new URL(context.req.url);
   url.pathname = "/graphql";
 
+  const setCookieHeaders: string[] = [];
+  const originalHeader = context.header.bind(context);
+  context.header = ((name: string, value?: string) => {
+    if (name === "Set-Cookie" && value !== undefined) {
+      setCookieHeaders.push(value);
+    }
+    return originalHeader(name, value);
+  }) as typeof context.header;
+
   const request = new Request(url.toString(), {
     method: context.req.method,
     headers: context.req.header(),
@@ -74,6 +83,19 @@ app.all("/graphql", async (context) => {
   (request as Request & { honoContext: Context }).honoContext = context;
 
   const response = await yoga.fetch(request);
+
+  if (setCookieHeaders.length > 0) {
+    const responseHeaders = new Headers(response.headers);
+    setCookieHeaders.forEach((cookie) => {
+      responseHeaders.append("Set-Cookie", cookie);
+    });
+    
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    });
+  }
 
   return response;
 });

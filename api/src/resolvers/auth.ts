@@ -8,7 +8,7 @@ import type { GraphQLContext } from "@/lib/types.ts";
 
 const AUTH_COOKIE_NAME = "auth-token";
 
-async function getCurrentUser(
+export async function getCurrentUser(
   context: Context
 ): Promise<GraphQLContext["user"]> {
   const cookieHeader = context.req.header("Cookie") || null;
@@ -154,25 +154,30 @@ export const authResolvers = {
     logout: async (_: unknown, __: unknown, context: GraphQLContext) => {
       const cookieHeader = context.context.req.header("Cookie") || null;
       const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
+      const cookieValue = clearCookie(AUTH_COOKIE_NAME);
 
       if (token) {
-        const user = await validateJWT(token);
-        if (user) {
-          console.info(`User logged out: ${user.id}`);
+        try {
+          const user = await validateJWT(token);
+          if (user) {
+            try {
+              const { error } = await supabase.auth.admin.signOut(token);
+              context.context.header("Set-Cookie", cookieValue);
+              if (error) {
+                console.error("Supabase signout error:", error.message);
+              } else {
+                console.info(`User logged out: ${user.id}`);
+              }
+            } catch (error) {
+              console.error("Supabase signout error:", error);
+            }
+          }
+        } catch (error) {
+          console.error("Token validation error during logout:", error);
         }
       }
-
-      const cookieValue = clearCookie(AUTH_COOKIE_NAME);
-      context.context.header("Set-Cookie", cookieValue);
 
       return true;
     },
   },
 };
-
-export async function createAuthContext(
-  context: Context
-): Promise<GraphQLContext> {
-  const user = await getCurrentUser(context);
-  return { context, user };
-}
