@@ -1,6 +1,5 @@
 import { supabase } from "./supabase.ts";
-import type { GraphQLContext } from "./types/graphql.ts";
-import type { CachedUser } from "./types/auth.ts";
+import type { CachedUser, User } from "./types/auth.ts";
 
 const cache = new Map<string, CachedUser>();
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -16,9 +15,7 @@ function cleanupCache() {
 
 setInterval(cleanupCache, 60 * 1000);
 
-export async function validateJWT(
-  token: string
-): Promise<GraphQLContext["user"]> {
+export async function validateJWT(token: string): Promise<User | null> {
   const cached = cache.get(token);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.user;
@@ -37,6 +34,7 @@ export async function validateJWT(
     const userData = {
       id: user.id,
       email: user.email,
+      emailVerified: Boolean(user.email_confirmed_at),
     };
 
     cache.set(token, {
@@ -49,4 +47,3 @@ export async function validateJWT(
     return null;
   }
 }
-

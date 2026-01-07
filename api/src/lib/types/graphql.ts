@@ -1,8 +1,7 @@
 import type { Context } from "hono";
-import type { User } from "@supabase/supabase-js";
+import { User } from "./auth.ts";
 
 export interface GraphQLContext {
   context: Context;
-  user: Pick<User, "id" | "email"> | null;
+  user: User | null;
 }
-

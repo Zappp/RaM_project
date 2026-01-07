@@ -1,15 +1,13 @@
 export const authTypeDefs = `
   type User {
-    id: ID
-    email: String!
-    createdAt: String
+    id: ID!
+    email: String
     emailVerified: Boolean!
   }
 
   type AuthPayload {
     user: User!
     token: String
-    requiresEmailVerification: Boolean!
   }
 
   type Query {
@@ -17,7 +15,7 @@ export const authTypeDefs = `
   }
 
   type Mutation {
-    signup(email: String!, password: String!): AuthPayload!
+    signup(email: String!, password: String!): User!
     login(email: String!, password: String!): AuthPayload!
     logout: Boolean!
   }

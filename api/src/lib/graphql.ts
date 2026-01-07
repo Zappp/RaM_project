@@ -30,7 +30,7 @@ export function createGraphQLServer() {
         me {
           id
           email
-          createdAt
+          emailVerified
         }
       }
     }`,

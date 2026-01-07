@@ -6,11 +6,9 @@ import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
 import { env } from "@/lib/env.ts";
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import { AUTH_COOKIE_NAME } from "@/lib/constants.ts";
-import type { AuthProps } from "@/lib/types/auth.ts";
+import type { AuthProps, User } from "@/lib/types/auth.ts";
 
-export async function getCurrentUser(
-  context: Context
-): Promise<GraphQLContext["user"]> {
+export async function getCurrentUser(context: Context): Promise<User | null> {
   const cookieHeader = context.req.header("Cookie") || null;
   const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
 
@@ -23,34 +21,21 @@ export async function getCurrentUser(
 
 export const authResolvers = {
   Query: {
-    me: async (_: unknown, _args: unknown, context: GraphQLContext) => {
+    me: (_: unknown, _args: unknown, context: GraphQLContext) => {
       if (!context.user) {
         throw new AuthenticationError();
       }
 
-      const cookieHeader = context.context.req.header("Cookie") || null;
-      const token = getCookie(cookieHeader, AUTH_COOKIE_NAME);
-
-      if (!token) {
-        throw new AuthenticationError();
-      }
-
-      const { data: userData } = await supabase.auth.getUser(token);
-
+      const user = context.user;
       return {
-        id: context.user.id,
-        email: context.user.email || "",
-        createdAt: new Date().toISOString(),
-        emailVerified: userData.user?.email_confirmed_at !== null || false,
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerified,
       };
     },
   },
   Mutation: {
-    signup: async (
-      _: unknown,
-      props: AuthProps,
-      context: GraphQLContext
-    ) => {
+    signup: async (_: unknown, props: AuthProps, _context: GraphQLContext) => {
       const { email, password } = props;
 
       if (!email || !password) {
@@ -78,41 +63,14 @@ export const authResolvers = {
         throw new ValidationError("Failed to create user");
       }
 
-      const requiresEmailVerification = !data.session;
-      let token: string | null = null;
-
-      if (data.session?.access_token) {
-        token = data.session.access_token;
-        const cookieValue = setCookie(
-          AUTH_COOKIE_NAME,
-          data.session.access_token
-        );
-        context.context.header("Set-Cookie", cookieValue);
-      }
-
-      console.info(
-        `User signed up: ${data.user.id}${
-          requiresEmailVerification ? " (email verification required)" : ""
-        }`
-      );
-
       return {
-        user: {
-          id: data.user.id,
-          email: data.user.email || "",
-          createdAt: data.user.created_at || new Date().toISOString(),
-          emailVerified: data.user.email_confirmed_at !== null,
-        },
-        token,
-        requiresEmailVerification,
+        id: data.user.id,
+        email: data.user.email,
+        emailVerified: Boolean(data.user.email_confirmed_at),
       };
     },
 
-    login: async (
-      _: unknown,
-      props: AuthProps,
-      context: GraphQLContext
-    ) => {
+    login: async (_: unknown, props: AuthProps, context: GraphQLContext) => {
       const { email, password } = props;
 
       if (!email || !password) {
@@ -142,12 +100,10 @@ export const authResolvers = {
       return {
         user: {
           id: data.user.id,
-          email: data.user.email || "",
-          createdAt: data.user.created_at || new Date().toISOString(),
-          emailVerified: data.user.email_confirmed_at !== null,
+          email: data.user.email,
+          emailVerified: Boolean(data.user.email_confirmed_at),
         },
         token,
-        requiresEmailVerification: false,
       };
     },
 
