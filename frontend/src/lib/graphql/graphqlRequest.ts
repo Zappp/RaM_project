@@ -20,7 +20,7 @@ export async function serverGraphqlRequest<
     .map((cookie) => `${cookie.name}=${cookie.value}`)
     .join("; ");
 
-  const response = await fetch(`${API_URL}/graphql`, {
+  const response = await fetch(API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -32,7 +32,18 @@ export async function serverGraphqlRequest<
     }),
   });
 
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`GraphQL request failed: ${response.status} ${response.statusText}`, text);
+    throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`);
+  }
+
   const result = await response.json();
+
+  if (!result) {
+    console.error("Empty response from GraphQL endpoint");
+    throw new Error("Empty response from GraphQL endpoint");
+  }
 
   if (result.errors && result.errors.length > 0) {
     const error = result.errors[0];
@@ -43,6 +54,11 @@ export async function serverGraphqlRequest<
     }
     
     throw new Error(errorMessage);
+  }
+
+  if (!result.data) {
+    console.error("No data in GraphQL response", result);
+    throw new Error("No data in GraphQL response");
   }
 
   return result.data as TResult;
