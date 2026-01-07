@@ -25,93 +25,46 @@ app.get("/auth/callback", async (context) => {
 
   if (error) {
     console.error("Auth callback error:", error);
-    return context.json(
-      {
-        data: null,
-        error: {
-          code: "AUTH_CALLBACK_ERROR",
-          message: "Authentication failed",
-        },
-      },
-      400
-    );
+    const redirectUrl = `${
+      env.FRONTEND_URL
+    }/auth/error?error=${encodeURIComponent(error)}`;
+    return context.redirect(redirectUrl, 302);
   }
 
   if (!code) {
-    return context.json(
-      {
-        data: null,
-        error: {
-          code: "MISSING_VERIFICATION_CODE",
-          message: "Missing verification code",
-        },
-      },
-      400
-    );
+    const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent("Missing verification code")}`;
+    return context.redirect(redirectUrl, 302);
   }
 
   try {
-    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error: exchangeError } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
       console.error("Code exchange error:", exchangeError.message);
-      return context.json(
-        {
-          data: null,
-          error: {
-            code: "CODE_EXCHANGE_FAILED",
-            message: "Verification failed",
-          },
-        },
-        400
-      );
+      const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent("Verification failed")}`;
+      return context.redirect(redirectUrl, 302);
     }
 
     if (!data.session) {
       console.error("No session returned from code exchange");
-      return context.json(
-        {
-          data: null,
-          error: {
-            code: "NO_SESSION_RETURNED",
-            message: "Verification failed",
-          },
-        },
-        400
-      );
+      const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent("Verification failed")}`;
+      return context.redirect(redirectUrl, 302);
     }
 
     console.info(`User email verified: ${data.user?.id}`);
 
-    const authCookie = setCookie("auth-token", data.session.access_token);
-    const response = context.json(
-      {
-        data: {
-          user: {
-            id: data.user?.id,
-            email: data.user?.email,
-          },
-          message: "Email verified successfully",
-        },
-        error: null,
-      },
-      200
-    );
-    response.headers.set("Set-Cookie", authCookie);
+    const cookieValue = setCookie("auth-token", data.session.access_token);
+    const redirectUrl = `${env.FRONTEND_URL}`; // TODO later redirect to a specific page
 
+    const response = context.redirect(redirectUrl, 302);
+    response.headers.set("Set-Cookie", cookieValue);
     return response;
   } catch (error) {
     console.error("Callback error:", error);
-    return context.json(
-      {
-        data: null,
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Verification failed",
-        },
-      },
-      500
-    );
+    const errorMessage = error instanceof Error ? error.message : "Verification failed";
+    const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent(errorMessage)}`;
+    return context.redirect(redirectUrl, 302);
   }
 });
 
@@ -131,9 +84,10 @@ app.all("/graphql", async (context) => {
   const request = new Request(url.toString(), {
     method: context.req.method,
     headers: context.req.header(),
-    body: context.req.method !== "GET" && context.req.method !== "HEAD"
-      ? await context.req.raw.clone().arrayBuffer()
-      : undefined,
+    body:
+      context.req.method !== "GET" && context.req.method !== "HEAD"
+        ? await context.req.raw.clone().arrayBuffer()
+        : undefined,
   });
 
   (request as Request & { honoContext: Context }).honoContext = context;
@@ -145,7 +99,7 @@ app.all("/graphql", async (context) => {
     setCookieHeaders.forEach((cookie) => {
       responseHeaders.append("Set-Cookie", cookie);
     });
-    
+
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
