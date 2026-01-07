@@ -16,19 +16,19 @@ export const favoriteCharactersTypeDefs = `
     prev: Int
   }
 
-  type FavoritesResponse {
+  type FavoriteCharactersResponse {
     results: [FavoriteCharacter!]!
     info: PageInfo!
   }
 
   extend type Query {
-    favorites(page: Int, pageSize: Int): FavoritesResponse!
-    favorite(characterId: Int!): FavoriteCharacter
+    favoriteCharacters(page: Int, pageSize: Int): FavoriteCharactersResponse!
+    favoriteCharacter(characterId: Int!): FavoriteCharacter
   }
 
   extend type Mutation {
-    addFavorite(characterId: Int!, characterName: String!, characterImage: String): FavoriteCharacter!
-    removeFavorite(characterId: Int!): Boolean!
+    addFavoriteCharacter(characterId: Int!, characterName: String!, characterImage: String): FavoriteCharacter!
+    removeFavoriteCharacter(characterId: Int!): Boolean!
   }
 `;
 

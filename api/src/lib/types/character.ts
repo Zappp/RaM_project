@@ -1,18 +1,4 @@
 export interface Character {
-  id: string;
-  name: string;
-  status: string | null;
-  species: string | null;
-  type: string | null;
-  gender: string | null;
-  origin: { name: string; url: string } | null;
-  location: { name: string; url: string } | null;
-  image: string | null;
-  episode: string[];
-  created: string | null;
-}
-
-export interface RickAndMortyCharacter {
   id: number;
   name: string;
   status: string;
@@ -26,13 +12,23 @@ export interface RickAndMortyCharacter {
   created: string;
 }
 
-export interface RickAndMortyResponse {
-  info: {
-    count: number;
-    pages: number;
-    next: string | null;
-    prev: string | null;
-  };
-  results: RickAndMortyCharacter[];
+export type CharacterIdProps = Omit<Pick<Character, "id">, "id"> & {
+  id: string;
+};
+
+export interface FavoriteCharacter {
+  id: string;
+  userId: string;
+  characterId: number;
+  characterName: string;
+  characterImage: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
+export type FavoriteCharacterIdProps = Pick<FavoriteCharacter, "characterId">;
+
+export type AddFavoriteCharacterProps = Pick<
+  FavoriteCharacter,
+  "characterId" | "characterName"
+> & { characterImage?: string | null };

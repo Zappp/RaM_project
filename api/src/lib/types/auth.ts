@@ -5,3 +5,8 @@ export interface CachedUser {
   expiresAt: number;
 }
 
+export interface AuthProps {
+  email: string;
+  password: string;
+}
+

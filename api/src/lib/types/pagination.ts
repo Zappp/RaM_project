@@ -10,3 +10,8 @@ export interface PaginatedResult<T> {
   info: PageInfo;
 }
 
+export interface PaginationProps {
+  page?: number;
+  pageSize?: number;
+}
+

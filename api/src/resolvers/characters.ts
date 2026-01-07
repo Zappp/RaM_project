@@ -1,15 +1,12 @@
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import { NotFoundError } from "@/lib/errors.ts";
-import type { PaginatedResult } from "@/lib/pagination.ts";
 import { createPageInfo } from "@/lib/pagination.ts";
 import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
-import type {
-  Character,
-  RickAndMortyCharacter,
-  RickAndMortyResponse,
-} from "@/lib/types/character.ts";
+import type { Character, CharacterIdProps } from "@/lib/types/character.ts";
+import type { PaginatedResult, PaginationProps } from "@/lib/types/pagination.ts";
 
-async function fetchCharacters(page?: number): Promise<RickAndMortyResponse> {
+async function fetchCharacters(props: Partial<Pick<PaginationProps, "page">>): Promise<PaginatedResult<Character>> {
+  const { page } = props;
   const url = page
     ? `${RICK_AND_MORTY_API_URL}/character?page=${page}`
     : `${RICK_AND_MORTY_API_URL}/character`;
@@ -20,10 +17,23 @@ async function fetchCharacters(page?: number): Promise<RickAndMortyResponse> {
     throw new Error(`Rick & Morty API error: ${response.statusText}`);
   }
 
-  return await response.json();
+  const data = await response.json();
+
+  const pageInfo = createPageInfo(
+    data.info.count,
+    data.info.pages,
+    data.info.next,
+    data.info.prev
+  );
+
+  return {
+    results: data.results,
+    info: pageInfo,
+  };
 }
 
-async function fetchCharacter(id: string): Promise<RickAndMortyCharacter> {
+async function fetchCharacter(props: CharacterIdProps): Promise<Character> {
+  const { id } = props;
   const response = await fetch(`${RICK_AND_MORTY_API_URL}/character/${id}`);
 
   if (!response.ok) {
@@ -36,55 +46,15 @@ async function fetchCharacter(id: string): Promise<RickAndMortyCharacter> {
   return await response.json();
 }
 
-
-
 export const charactersResolvers = {
   Query: {
     characters: async (
       _: unknown,
-      args: { page?: number },
+      props: Partial<Pick<PaginationProps, "page">>,
       _context: GraphQLContext
     ): Promise<PaginatedResult<Character>> => {
       try {
-        const data = await fetchCharacters(args.page);
-
-        const pageInfo = createPageInfo(
-          data.info.count,
-          data.info.pages,
-          data.info.next,
-          data.info.prev
-        );
-
-        const results = data.results.map((char) => ({
-          id: String(char.id),
-          name: char.name,
-          status: char.status,
-          species: char.species,
-          type: char.type,
-          gender: char.gender,
-          origin: char.origin
-            ? {
-                name: char.origin.name,
-                url: char.origin.url,
-              }
-            : null,
-          location: char.location
-            ? {
-                name: char.location.name,
-                url: char.location.url,
-              }
-            : null,
-          image: char.image,
-          episode: char.episode,
-          created: char.created,
-        }));
-
-        console.info(`Fetched ${results.length} characters (page: ${args.page || 1})`);
-
-        return {
-          results,
-          info: pageInfo,
-        };
+        return await fetchCharacters(props);
       } catch (error) {
         console.error("Error fetching characters:", error);
         const message = error instanceof Error ? error.message : "Failed to fetch characters";
@@ -94,37 +64,15 @@ export const charactersResolvers = {
 
     character: async (
       _: unknown,
-      args: { id: string },
+      props: CharacterIdProps,
       _context: GraphQLContext
-    ) => {
+    ): Promise<Character> => {
       try {
-        const char = await fetchCharacter(args.id);
-
-        return {
-          id: String(char.id),
-          name: char.name,
-          status: char.status,
-          species: char.species,
-          type: char.type,
-          gender: char.gender,
-          origin: char.origin
-            ? {
-                name: char.origin.name,
-                url: char.origin.url,
-              }
-            : null,
-          location: char.location
-            ? {
-                name: char.location.name,
-                url: char.location.url,
-              }
-            : null,
-          image: char.image,
-          episode: char.episode,
-          created: char.created,
-        };
+        const char = await fetchCharacter(props);
+        return char;
       } catch (error) {
-        console.error(`Error fetching character ${args.id}:`, error);
+        const { id } = props;
+        console.error(`Error fetching character ${id}:`, error);
         if (error instanceof NotFoundError) {
           throw error;
         }
@@ -134,4 +82,3 @@ export const charactersResolvers = {
     },
   },
 };
-

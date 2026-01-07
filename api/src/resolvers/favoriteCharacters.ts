@@ -1,0 +1,247 @@
+import type { GraphQLContext } from "@/lib/types/graphql.ts";
+import {
+  AuthenticationError,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors.ts";
+import { createAuthenticatedSupabaseClient } from "@/lib/supabase.ts";
+import type {
+  FavoriteCharacter,
+  FavoriteCharacterIdProps,
+  AddFavoriteCharacterProps,
+} from "@/lib/types/character.ts";
+import type {
+  PaginationProps,
+  PaginatedResult,
+} from "@/lib/types/pagination.ts";
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants.ts";
+
+async function getFavoriteCharacters(
+  context: GraphQLContext,
+  props: Required<PaginationProps>
+): Promise<PaginatedResult<FavoriteCharacter>> {
+  if (!context.user) {
+    throw new AuthenticationError();
+  }
+
+  const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = props;
+  const offset = (page - 1) * pageSize;
+  const authClient = createAuthenticatedSupabaseClient(context);
+
+  const { data, error, count } = await authClient
+    .from("favorite_characters")
+    .select("*", { count: "exact" })
+    .eq("user_id", context.user.id)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    console.error("Error fetching favorite characters:", error);
+    throw new Error("Failed to fetch favorite characters");
+  }
+
+  const totalCount = count || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const results = (data || []).map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    characterId: row.character_id,
+    characterName: row.character_name,
+    characterImage: row.character_image || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+
+  const pageInfo = {
+    count: totalCount,
+    pages: totalPages,
+    next: page < totalPages ? page + 1 : null,
+    prev: page > 1 ? page - 1 : null,
+  };
+
+  return {
+    results,
+    info: pageInfo,
+  };
+}
+
+async function getFavoriteCharacter(
+  context: GraphQLContext,
+  props: FavoriteCharacterIdProps
+): Promise<FavoriteCharacter | null> {
+  if (!context.user) {
+    throw new AuthenticationError();
+  }
+
+  const { characterId } = props;
+  const authClient = createAuthenticatedSupabaseClient(context);
+
+  const { data, error } = await authClient
+    .from("favorite_characters")
+    .select("*")
+    .eq("user_id", context.user.id)
+    .eq("character_id", characterId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    console.error("Error fetching favorite character:", error);
+    throw new Error("Failed to fetch favorite character");
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    characterId: data.character_id,
+    characterName: data.character_name,
+    characterImage: data.character_image || null,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+async function addFavoriteCharacter(
+  context: GraphQLContext,
+  props: Required<AddFavoriteCharacterProps>
+): Promise<FavoriteCharacter> {
+  if (!context.user) {
+    throw new AuthenticationError();
+  }
+
+  const { characterId, characterName, characterImage = null } = props;
+  const authClient = createAuthenticatedSupabaseClient(context);
+
+  const { data, error } = await authClient
+    .from("favorite_characters")
+    .insert({
+      user_id: context.user.id,
+      character_id: characterId,
+      character_name: characterName,
+      character_image: characterImage ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new ValidationError("Character is already in favorites");
+    }
+    console.error("Error adding favorite character:", error);
+    throw new Error("Failed to add favorite character");
+  }
+
+  if (!data) {
+    throw new Error("Failed to add favorite character");
+  }
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    characterId: data.character_id,
+    characterName: data.character_name,
+    characterImage: data.character_image || null,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+async function removeFavoriteCharacter(
+  context: GraphQLContext,
+  props: FavoriteCharacterIdProps
+): Promise<boolean> {
+  if (!context.user) {
+    throw new AuthenticationError();
+  }
+
+  const { characterId } = props;
+  const authClient = createAuthenticatedSupabaseClient(context);
+
+  const { error } = await authClient
+    .from("favorite_characters")
+    .delete()
+    .eq("user_id", context.user.id)
+    .eq("character_id", characterId);
+
+  if (error) {
+    console.error("Error removing favorite character:", error);
+    throw new Error("Failed to remove favorite character");
+  }
+  
+  return true;
+}
+
+export const favoriteCharactersResolvers = {
+  Query: {
+    favoriteCharacters: async (
+      _: unknown,
+      props: PaginationProps,
+      context: GraphQLContext
+    ): Promise<PaginatedResult<FavoriteCharacter>> => {
+      const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = props;
+
+      if (page < 1) {
+        throw new ValidationError("Page must be greater than 0");
+      }
+
+      if (pageSize < 1 || pageSize > 100) {
+        throw new ValidationError("Page size must be between 1 and 100");
+      }
+
+      return await getFavoriteCharacters(context, { page, pageSize });
+    },
+
+    favoriteCharacter: async (
+      _: unknown,
+      props: FavoriteCharacterIdProps,
+      context: GraphQLContext
+    ): Promise<FavoriteCharacter | null> => {
+      return await getFavoriteCharacter(context, props);
+    },
+  },
+
+  Mutation: {
+    addFavoriteCharacter: async (
+      _: unknown,
+      props: AddFavoriteCharacterProps,
+      context: GraphQLContext
+    ): Promise<FavoriteCharacter> => {
+      const { characterId, characterName, characterImage = null } = props;
+
+      if (!characterId || !characterName) {
+        throw new ValidationError("Character ID and name are required");
+      }
+
+      return await addFavoriteCharacter(context, {
+        characterId,
+        characterName,
+        characterImage,
+      });
+    },
+
+    removeFavoriteCharacter: async (
+      _: unknown,
+      props: FavoriteCharacterIdProps,
+      context: GraphQLContext
+    ): Promise<boolean> => {
+      const { characterId } = props;
+
+      if (!characterId) {
+        throw new ValidationError("Character ID is required");
+      }
+
+      const favoriteCharacter = await getFavoriteCharacter(context, props);
+      if (!favoriteCharacter) {
+        throw new NotFoundError("Favorite character not found");
+      }
+
+      return await removeFavoriteCharacter(context, props);
+    },
+  },
+};

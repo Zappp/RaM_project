@@ -6,6 +6,7 @@ import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
 import { env } from "@/lib/env.ts";
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import { AUTH_COOKIE_NAME } from "@/lib/constants.ts";
+import type { AuthProps } from "@/lib/types/auth.ts";
 
 export async function getCurrentUser(
   context: Context
@@ -22,7 +23,7 @@ export async function getCurrentUser(
 
 export const authResolvers = {
   Query: {
-    me: async (_: unknown, __: unknown, context: GraphQLContext) => {
+    me: async (_: unknown, _args: unknown, context: GraphQLContext) => {
       if (!context.user) {
         throw new AuthenticationError();
       }
@@ -47,10 +48,10 @@ export const authResolvers = {
   Mutation: {
     signup: async (
       _: unknown,
-      args: { email: string; password: string },
+      props: AuthProps,
       context: GraphQLContext
     ) => {
-      const { email, password } = args;
+      const { email, password } = props;
 
       if (!email || !password) {
         throw new ValidationError("Email and password are required");
@@ -109,10 +110,10 @@ export const authResolvers = {
 
     login: async (
       _: unknown,
-      args: { email: string; password: string },
+      props: AuthProps,
       context: GraphQLContext
     ) => {
-      const { email, password } = args;
+      const { email, password } = props;
 
       if (!email || !password) {
         throw new ValidationError("Email and password are required");

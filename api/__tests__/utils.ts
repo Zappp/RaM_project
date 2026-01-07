@@ -1,6 +1,5 @@
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import type { Context } from "hono";
-import type { RickAndMortyResponse, RickAndMortyCharacter } from "@/lib/types/character.ts";
 
 export function createMockContext(): GraphQLContext {
   const mockHonoContext = {
@@ -17,7 +16,7 @@ export function createMockContext(): GraphQLContext {
 }
 
 export function mockFetch(
-  response: RickAndMortyResponse | RickAndMortyCharacter,
+  response: unknown,
   ok: boolean = true
 ): typeof fetch {
   return () => {
