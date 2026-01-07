@@ -16,7 +16,15 @@ export async function getCurrentUser(context: Context): Promise<User | null> {
     return null;
   }
 
-  return await validateJWT(token);
+  const user = await validateJWT(token);
+
+  if (!user) {
+    const cookieValue = clearCookie(AUTH_COOKIE_NAME);
+    context.header("Set-Cookie", cookieValue);
+    return null;
+  }
+
+  return user;
 }
 
 export const authResolvers = {
