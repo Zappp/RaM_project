@@ -4,7 +4,6 @@ const envSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  PORT: z.coerce.number().optional(),
   API_URL: z.url().optional(),
   FRONTEND_URL: z.url().optional(),
 });
@@ -14,7 +13,6 @@ function getEnv() {
     SUPABASE_URL: Deno.env.get("SUPABASE_URL"),
     SUPABASE_ANON_KEY: Deno.env.get("SUPABASE_ANON_KEY"),
     SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
-    PORT: Deno.env.get("PORT"),
     API_URL: Deno.env.get("API_URL"),
     FRONTEND_URL: Deno.env.get("FRONTEND_URL"),
   };
@@ -28,8 +26,7 @@ function getEnv() {
 
   return {
     ...result.data,
-    PORT: result.data.PORT ?? 8000,
-    API_URL: result.data.API_URL ?? "http://localhost:8000",
+    API_URL: result.data.API_URL ?? "http://localhost:54321/functions/v1/graphql",
     FRONTEND_URL: result.data.FRONTEND_URL ?? "http://localhost:3000",
   };
 }

@@ -1,9 +1,9 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { createGraphQLServer } from "@/lib/graphql.ts";
-import { env } from "@/lib/env.ts";
-import { supabase } from "@/lib/supabase.ts";
-import { setCookie } from "@/lib/cookies.ts";
+import { createGraphQLServer } from "../../../src/lib/graphql.ts";
+import { env } from "../../../src/lib/env.ts";
+import { supabase } from "../../../src/lib/supabase.ts";
+import { setCookie } from "../../../src/lib/cookies.ts";
 
 const app = new Hono();
 
@@ -19,59 +19,71 @@ app.use(
   })
 );
 
-app.get("/auth/callback", async (context) => {
-  const code = context.req.query("code");
-  const error = context.req.query("error");
+app.all("*", async (context) => {
+  const path = context.req.path;
+  const requestUrl = context.req.url;
 
-  if (error) {
-    console.error("Auth callback error:", error);
-    const redirectUrl = `${
-      env.FRONTEND_URL
-    }/auth/error?error=${encodeURIComponent(error)}`;
-    return context.redirect(redirectUrl, 302);
-  }
+  if (
+    path === "/auth/callback" ||
+    path.endsWith("/auth/callback") ||
+    requestUrl.includes("/auth/callback")
+  ) {
+    const code = context.req.query("code");
+    const error = context.req.query("error");
 
-  if (!code) {
-    const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent("Missing verification code")}`;
-    return context.redirect(redirectUrl, 302);
-  }
-
-  try {
-    const { data, error: exchangeError } =
-      await supabase.auth.exchangeCodeForSession(code);
-
-    if (exchangeError) {
-      console.error("Code exchange error:", exchangeError.message);
-      const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent("Verification failed")}`;
+    if (error) {
+      console.error("Auth callback error:", error);
+      const redirectUrl = `${
+        env.FRONTEND_URL
+      }/auth/error?error=${encodeURIComponent(error)}`;
       return context.redirect(redirectUrl, 302);
     }
 
-    if (!data.session) {
-      console.error("No session returned from code exchange");
-      const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent("Verification failed")}`;
+    if (!code) {
+      const redirectUrl = `${
+        env.FRONTEND_URL
+      }/auth/error?error=${encodeURIComponent("Missing verification code")}`;
       return context.redirect(redirectUrl, 302);
     }
 
-    console.info(`User email verified: ${data.user?.id}`);
+    try {
+      const { data, error: exchangeError } =
+        await supabase.auth.exchangeCodeForSession(code);
 
-    const cookieValue = setCookie("auth-token", data.session.access_token);
-    const redirectUrl = `${env.FRONTEND_URL}`; // TODO later redirect to a specific page
+      if (exchangeError) {
+        console.error("Code exchange error:", exchangeError.message);
+        const redirectUrl = `${
+          env.FRONTEND_URL
+        }/auth/error?error=${encodeURIComponent("Verification failed")}`;
+        return context.redirect(redirectUrl, 302);
+      }
 
-    const response = context.redirect(redirectUrl, 302);
-    response.headers.set("Set-Cookie", cookieValue);
-    return response;
-  } catch (error) {
-    console.error("Callback error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Verification failed";
-    const redirectUrl = `${env.FRONTEND_URL}/auth/error?error=${encodeURIComponent(errorMessage)}`;
-    return context.redirect(redirectUrl, 302);
+      if (!data.session) {
+        console.error("No session returned from code exchange");
+        const redirectUrl = `${
+          env.FRONTEND_URL
+        }/auth/error?error=${encodeURIComponent("Verification failed")}`;
+        return context.redirect(redirectUrl, 302);
+      }
+
+      console.info(`User email verified: ${data.user?.id}`);
+
+      const cookieValue = setCookie("auth-token", data.session.access_token);
+      const redirectUrl = `${env.FRONTEND_URL}/dashboard`;
+
+      const response = context.redirect(redirectUrl, 302);
+      response.headers.set("Set-Cookie", cookieValue);
+      return response;
+    } catch (error) {
+      console.error("Callback error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Verification failed";
+      const redirectUrl = `${
+        env.FRONTEND_URL
+      }/auth/error?error=${encodeURIComponent(errorMessage)}`;
+      return context.redirect(redirectUrl, 302);
+    }
   }
-});
-
-app.all("/graphql", async (context) => {
-  const url = new URL(context.req.url);
-  url.pathname = "/graphql";
-
   const setCookieHeaders: string[] = [];
   const originalHeader = context.header.bind(context);
   context.header = ((name: string, value?: string) => {
@@ -80,6 +92,9 @@ app.all("/graphql", async (context) => {
     }
     return originalHeader(name, value);
   }) as typeof context.header;
+
+  const url = new URL(context.req.url);
+  url.pathname = "/graphql";
 
   const request = new Request(url.toString(), {
     method: context.req.method,
@@ -137,12 +152,6 @@ app.onError((err, context) => {
   );
 });
 
-Deno.serve(
-  {
-    port: env.PORT,
-    onListen: ({ port }) => {
-      console.log(`Server running on port ${port}`);
-    },
-  },
-  app.fetch
-);
+Deno.serve((req: Request) => {
+  return app.fetch(req);
+});

@@ -31,7 +31,7 @@ export const authResolvers = {
   Query: {
     me: (_: unknown, _args: unknown, context: GraphQLContext) => {
       if (!context.user) {
-        return null;
+        throw new AuthenticationError("Authentication required");
       }
 
       const user = context.user;
