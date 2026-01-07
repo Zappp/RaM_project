@@ -34,7 +34,7 @@ export async function validateJWT(token: string): Promise<User | null> {
     const userData = {
       id: user.id,
       email: user.email,
-      emailVerified: Boolean(user.email_confirmed_at),
+      emailVerified: Boolean(user.user_metadata.email_verified),
     };
 
     cache.set(token, {

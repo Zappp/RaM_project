@@ -23,7 +23,7 @@ export const authResolvers = {
   Query: {
     me: (_: unknown, _args: unknown, context: GraphQLContext) => {
       if (!context.user) {
-        throw new AuthenticationError();
+        return null;
       }
 
       const user = context.user;
@@ -66,7 +66,10 @@ export const authResolvers = {
       return {
         id: data.user.id,
         email: data.user.email,
-        emailVerified: Boolean(data.user.email_confirmed_at),
+        emailVerified:
+          data.user.user_metadata?.email_verified === undefined
+            ? true
+            : data.user.user_metadata?.email_verified,
       };
     },
 
@@ -101,7 +104,7 @@ export const authResolvers = {
         user: {
           id: data.user.id,
           email: data.user.email,
-          emailVerified: Boolean(data.user.email_confirmed_at),
+          emailVerified: Boolean(data.user.user_metadata.email_verified),
         },
         token,
       };

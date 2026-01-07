@@ -8,6 +8,7 @@
     "@supabase/postgrest-js": "npm:@supabase/postgrest-js@^2.89.0",
     "@supabase/storage-js": "npm:@supabase/storage-js@^2.89.0",
     "@supabase/auth-js": "npm:@supabase/auth-js@^2.89.0",
+    "graphql": "npm:graphql@^16.8.1",
     "graphql-yoga": "npm:graphql-yoga@^5.18.0",
     "@graphql-tools/schema": "npm:@graphql-tools/schema@^10.0.30",
     "@graphql-tools/utils": "npm:@graphql-tools/utils@^10.11.0",

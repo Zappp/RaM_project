@@ -1,4 +1,5 @@
 import { createYoga } from "graphql-yoga";
+import { GraphQLError } from "graphql";
 import { schema } from "@/schema/index.ts";
 import { formatGraphQLError } from "@/lib/errors.ts";
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
@@ -36,12 +37,15 @@ export function createGraphQLServer() {
     }`,
     },
     maskedErrors: {
-      maskError(error: unknown, _message: string, isDev?: boolean): Error {
-        if (isDev) {
-          return error instanceof Error ? error : new Error(String(error));
-        }
+      maskError(error: unknown, _message: string, _isDev?: boolean): GraphQLError {
         const formatted = formatGraphQLError(error);
-        return new Error(formatted.message);
+        
+        return new GraphQLError(formatted.message, {
+          extensions: {
+            code: formatted.code,
+            statusCode: formatted.statusCode,
+          },
+        });
       },
     },
     cors: false,
