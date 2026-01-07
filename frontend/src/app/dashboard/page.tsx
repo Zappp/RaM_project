@@ -1,24 +1,51 @@
-import { getUser } from '@/lib/utils/user';
-import { LogoutButton } from '@/components/auth/LogoutButton';
+import { getCharacters } from "@/lib/actions/characters";
+import { getFavoriteCharacter } from "@/lib/actions/favoriteCharacters";
+import { CharactersList } from "@/components/characters/CharactersList";
 
-export default async function DashboardPage() {
-  const user = await getUser();
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const charactersData = await getCharacters(page);
 
-  if (!user) {
-    return null;
-  }
+  const favoriteChecks = await Promise.all(
+    charactersData.results.map(async (character) => {
+      const characterId = parseInt(character.id, 10);
+      try {
+        const favorite = await getFavoriteCharacter(characterId);
+        return { characterId, isFavorite: !!favorite };
+      } catch {
+        return { characterId, isFavorite: false };
+      }
+    })
+  );
+
+  const favoriteMap = new Map(
+    favoriteChecks.map((check) => [check.characterId, check.isFavorite])
+  );
+
+  const charactersWithFavorites = charactersData.results.map((character) => ({
+    ...character,
+    isFavorite: favoriteMap.get(parseInt(character.id, 10)) || false,
+  }));
 
   return (
     <div>
       <h1>Dashboard</h1>
       <div>
-        <h2>Welcome!</h2>
-        <div>ID: {user.id}</div>
-        <div>Email: {user.email || 'No email'}</div>
-        <div>Email Verified: {user.emailVerified ? 'Yes' : 'No'}</div>
+        <h2>Characters</h2>
+        <CharactersList
+          characters={charactersWithFavorites}
+          pageInfo={charactersData.info}
+          currentPage={page}
+          canAdd={true}
+          canRemove={false}
+        />
       </div>
-      <LogoutButton />
     </div>
   );
 }
+
 

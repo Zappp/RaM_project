@@ -1,8 +1,10 @@
+"server-only";
+
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import { print } from "graphql";
 import { cookies } from "next/headers";
-import { handleSetCookieHeaders } from "../utils/cookies";
+import { redirect } from "next/navigation";
 import { API_URL } from "../constants";
 
 export async function serverGraphqlRequest<
@@ -30,18 +32,16 @@ export async function serverGraphqlRequest<
     }),
   });
 
-  const setCookieHeaders = response.headers.getSetCookie();
-  handleSetCookieHeaders(setCookieHeaders);
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
   const result = await response.json();
 
   if (result.errors && result.errors.length > 0) {
     const error = result.errors[0];
     const errorMessage = error.message ?? "An error occurred";
+    
+    if (errorMessage === "Authentication required") {
+      redirect("/api/auth/logout");
+    }
+    
     throw new Error(errorMessage);
   }
 

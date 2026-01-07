@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   const authCookie = request.cookies.get(AUTH_COOKIE_NAME);
   const isAuthenticated = !!authCookie?.value;
 
-  const protectedRoutes = ["/dashboard"];
+  const protectedRoutes = ["/dashboard", "/favorites"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );

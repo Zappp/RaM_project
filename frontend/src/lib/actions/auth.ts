@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { serverGraphqlRequest } from "../graphql/graphqlRequest";
+import { setAuthCookie, clearAuthCookie } from "../utils/cookies";
 import {
   SignupDocument,
   LoginDocument,
@@ -25,13 +26,10 @@ export async function signupAction(_prevState: unknown, formData: FormData) {
   const password = formData.get("password") as string;
 
   try {
-    const data = await serverGraphqlRequest<SignupMutation>(
-      SignupDocument,
-      {
-        email,
-        password,
-      }
-    );
+    const data = await serverGraphqlRequest<SignupMutation>(SignupDocument, {
+      email,
+      password,
+    });
 
     if (!data.signup.emailVerified) {
       return { message: "Please check your email to verify your account" };
@@ -50,20 +48,33 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
   const password = formData.get("password") as string;
 
   try {
-    await serverGraphqlRequest<LoginMutation>(LoginDocument, {
+    const data = await serverGraphqlRequest<LoginMutation>(LoginDocument, {
       email,
       password,
     });
+    
+    if (data.login?.token) {
+      setAuthCookie(data.login.token);
+    }
+    
+    redirect("/dashboard");
   } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) {
+      throw error;
+    }
     const errorMessage =
       error instanceof Error ? error.message : "Login failed";
     return { error: errorMessage };
   }
-
-  redirect("/dashboard");
 }
 
 export async function logoutAction() {
-  await serverGraphqlRequest(LogoutDocument);
+  try {
+    await serverGraphqlRequest(LogoutDocument);
+  } catch (error) {
+    // Ignore errors, still clear cookie and redirect
+  }
+  
+  clearAuthCookie();
   redirect("/");
 }
