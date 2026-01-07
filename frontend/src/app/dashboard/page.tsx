@@ -10,6 +10,15 @@ export default async function DashboardPage({
   const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
   const charactersData = await getCharacters(page);
 
+  if (!charactersData) {
+    return (
+      <div>
+        <h1>Error loading characters</h1>
+        <p>Failed to load characters. Please try again later.</p>
+      </div>
+    );
+  }
+
   const favoriteChecks = await Promise.all(
     charactersData.results.map(async (character) => {
       const characterId = parseInt(character.id, 10);

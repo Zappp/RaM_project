@@ -56,8 +56,8 @@ export function CharactersTable({
                   )}
                 </td>
                 <td>{item.characterName}</td>
-                <td>-</td>
-                <td>-</td>
+                <td>{item.characterStatus || "Unknown"}</td>
+                <td>{item.characterSpecies || "Unknown"}</td>
                 {showFavoriteAction && (
                   <td>
                     <FavoriteButton
