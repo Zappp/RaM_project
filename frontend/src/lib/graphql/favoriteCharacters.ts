@@ -9,6 +9,8 @@ export const FavoriteCharactersQuery = gql`
         characterId
         characterName
         characterImage
+        characterStatus
+        characterSpecies
         createdAt
         updatedAt
       }
@@ -30,6 +32,8 @@ export const FavoriteCharacterQuery = gql`
       characterId
       characterName
       characterImage
+      characterStatus
+      characterSpecies
       createdAt
       updatedAt
     }
