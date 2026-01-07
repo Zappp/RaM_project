@@ -1,18 +1,17 @@
-"use client";
+import Link from 'next/link';
 
-import { useSearchParams, useRouter } from "next/navigation";
-
-export default function ErrorPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const message = searchParams.get("message") || "An error occurred";
+export default function AuthErrorPage({
+  searchParams,
+}: {
+  searchParams: { error?: string };
+}) {
+  const error = searchParams.error || 'An error occurred';
 
   return (
     <div>
       <h1>Authentication Error</h1>
-      <div>{message}</div>
-      <button onClick={() => router.push("/")}>Go to Home</button>
+      <p>{decodeURIComponent(error)}</p>
+      <Link href="/">Go back to home</Link>
     </div>
   );
 }
-
