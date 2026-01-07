@@ -5,6 +5,8 @@ export const favoriteCharactersTypeDefs = `
     characterId: Int!
     characterName: String!
     characterImage: String
+    characterStatus: String
+    characterSpecies: String
     createdAt: String!
     updatedAt: String!
   }

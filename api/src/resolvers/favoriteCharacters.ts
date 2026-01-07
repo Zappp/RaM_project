@@ -5,6 +5,7 @@ import {
   ValidationError,
 } from "@/lib/errors.ts";
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase.ts";
+import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
 import type {
   FavoriteCharacter,
   FavoriteCharacterIdProps,
@@ -49,6 +50,8 @@ async function getFavoriteCharacters(
     characterId: row.character_id,
     characterName: row.character_name,
     characterImage: row.character_image || null,
+    characterStatus: row.character_status || null,
+    characterSpecies: row.character_species || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }));
@@ -102,6 +105,8 @@ async function getFavoriteCharacter(
     characterId: data.character_id,
     characterName: data.character_name,
     characterImage: data.character_image || null,
+    characterStatus: data.character_status || null,
+    characterSpecies: data.character_species || null,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };
@@ -116,6 +121,23 @@ async function addFavoriteCharacter(
   }
 
   const { characterId, characterName, characterImage = null } = props;
+  
+  // Fetch character data from Rick and Morty API to get status and species
+  let characterStatus: string | null = null;
+  let characterSpecies: string | null = null;
+  
+  try {
+    const response = await fetch(`${RICK_AND_MORTY_API_URL}/character/${characterId}`);
+    if (response.ok) {
+      const characterData = await response.json();
+      characterStatus = characterData.status || null;
+      characterSpecies = characterData.species || null;
+    }
+  } catch (error) {
+    console.error("Error fetching character data:", error);
+    // Continue without status/species if API call fails
+  }
+  
   const authClient = createAuthenticatedSupabaseClient(context);
 
   const { data, error } = await authClient
@@ -125,6 +147,8 @@ async function addFavoriteCharacter(
       character_id: characterId,
       character_name: characterName,
       character_image: characterImage ?? null,
+      character_status: characterStatus,
+      character_species: characterSpecies,
     })
     .select()
     .single();
@@ -147,6 +171,8 @@ async function addFavoriteCharacter(
     characterId: data.character_id,
     characterName: data.character_name,
     characterImage: data.character_image || null,
+    characterStatus: data.character_status || null,
+    characterSpecies: data.character_species || null,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };

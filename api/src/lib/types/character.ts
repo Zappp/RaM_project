@@ -22,6 +22,8 @@ export interface FavoriteCharacter {
   characterId: number;
   characterName: string;
   characterImage: string | null;
+  characterStatus: string | null;
+  characterSpecies: string | null;
   createdAt: string;
   updatedAt: string;
 }
