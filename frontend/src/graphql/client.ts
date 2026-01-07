@@ -1,9 +1,16 @@
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentNode } from 'graphql';
+import { print } from 'graphql';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function graphqlRequest<T = any>(
-  query: string,
-  variables?: Record<string, any>
-): Promise<T> {
+export async function graphqlRequest<
+  TResult = unknown,
+  TVariables = Record<string, unknown>
+>(
+  document: TypedDocumentNode<TResult, TVariables> | DocumentNode,
+  variables?: TVariables
+): Promise<TResult> {
   const response = await fetch(`${API_URL}/graphql`, {
     method: "POST",
     headers: {
@@ -11,7 +18,7 @@ export async function graphqlRequest<T = any>(
     },
     credentials: "include",
     body: JSON.stringify({
-      query,
+      query: print(document),
       variables,
     }),
   });
@@ -26,6 +33,6 @@ export async function graphqlRequest<T = any>(
     throw new Error(result.errors[0]?.message || "GraphQL error");
   }
 
-  return result.data;
+  return result.data as TResult;
 }
 

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { graphqlRequest } from "@/lib/graphql";
+import { graphqlRequest } from "../lib/graphql/client";
+import { MeDocument, SignupDocument, LoginDocument, LogoutDocument } from "../lib/types/generated";
+import type { MeQuery, SignupMutation, LoginMutation } from "../lib/types/generated";
+import type { User } from "../lib/types/user";
 
 export default function Home() {
   const [signupEmail, setSignupEmail] = useState("");
@@ -9,26 +12,17 @@ export default function Home() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Check if user is authenticated on page load
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
-      const data = await graphqlRequest(`
-        query Me {
-          me {
-            id
-            email
-            emailVerified
-          }
-        }
-      `);
-      setUser(data.me);
+      const data = await graphqlRequest<MeQuery>(MeDocument);
+      setUser(data.me ?? null);
     } catch {
       setUser(null);
     }
@@ -40,33 +34,19 @@ export default function Home() {
     setMessage("");
 
     try {
-      const data = await graphqlRequest(`
-        mutation Signup($email: String!, $password: String!) {
-          signup(email: $email, password: $password) {
-            user {
-              id
-              email
-              emailVerified
-            }
-            token
-            requiresEmailVerification
-          }
-        }
-      `, {
+      const data = await graphqlRequest<SignupMutation>(SignupDocument, {
         email: signupEmail,
         password: signupPassword,
       });
 
-      if (data.signup.requiresEmailVerification) {
+      if (!data.signup.emailVerified) {
         setMessage("Please check your email to verify your account");
-        setSignupEmail("");
-        setSignupPassword("");
       } else {
         setMessage("Signup successful!");
-        setUser(data.signup.user);
-        setSignupEmail("");
-        setSignupPassword("");
       }
+      setUser(data.signup);
+      setSignupEmail("");
+      setSignupPassword("");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Signup failed");
     } finally {
@@ -80,19 +60,7 @@ export default function Home() {
     setMessage("");
 
     try {
-      const data = await graphqlRequest(`
-        mutation Login($email: String!, $password: String!) {
-          login(email: $email, password: $password) {
-            user {
-              id
-              email
-              emailVerified
-            }
-            token
-            requiresEmailVerification
-          }
-        }
-      `, {
+      const data = await graphqlRequest<LoginMutation>(LoginDocument, {
         email: loginEmail,
         password: loginPassword,
       });
@@ -101,7 +69,6 @@ export default function Home() {
       setUser(data.login.user);
       setLoginEmail("");
       setLoginPassword("");
-      // Refresh user data to ensure we have latest state
       await checkAuth();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Login failed");
@@ -115,17 +82,8 @@ export default function Home() {
     setMessage("");
 
     try {
-      const data = await graphqlRequest(`
-        query Me {
-          me {
-            id
-            email
-            emailVerified
-          }
-        }
-      `);
-
-      setUser(data.me);
+      const data = await graphqlRequest<MeQuery>(MeDocument);
+      setUser(data.me ?? null);
       setMessage("User data retrieved");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to get user");
@@ -140,15 +98,9 @@ export default function Home() {
     setMessage("");
 
     try {
-      await graphqlRequest(`
-        mutation Logout {
-          logout
-        }
-      `);
-
+      await graphqlRequest(LogoutDocument);
       setMessage("Logged out");
       setUser(null);
-      // Verify logout by checking auth
       await checkAuth();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Logout failed");
