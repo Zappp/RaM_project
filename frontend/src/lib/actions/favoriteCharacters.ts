@@ -22,7 +22,8 @@ export async function getFavoriteCharacters(page?: number, pageSize?: number) {
     );
     return data.favoriteCharacters;
   } catch (error) {
-    throw error;
+    console.error("Error fetching favorite characters:", error);
+    return null;
   }
 }
 
@@ -34,6 +35,7 @@ export async function getFavoriteCharacter(characterId: number) {
     );
     return data.favoriteCharacter;
   } catch (error) {
+    console.error("Error fetching favorite character:", error);
     return null;
   }
 }
@@ -54,9 +56,8 @@ export async function addFavoriteCharacter(
     );
     return data.addFavoriteCharacter;
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to add favorite";
-    throw new Error(errorMessage);
+    console.error("Error adding favorite character:", error);
+    return null;
   }
 }
 
@@ -68,8 +69,7 @@ export async function removeFavoriteCharacter(characterId: number) {
     );
     return true;
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to remove favorite";
-    throw new Error(errorMessage);
+    console.error("Error removing favorite character:", error);
+    return null;
   }
 }

@@ -12,7 +12,8 @@ export async function getCharacters(page?: number) {
     );
     return data.characters;
   } catch (error) {
-    throw error;
+    console.error("Error fetching characters:", error);
+    return null;
   }
 }
 

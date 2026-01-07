@@ -52,29 +52,28 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
       email,
       password,
     });
-    
-    if (data.login?.token) {
-      setAuthCookie(data.login.token);
+
+    if (!data.login?.token) {
+      return { error: "Login failed: No token received" };
     }
-    
-    redirect("/dashboard");
+
+    setAuthCookie(data.login.token);
   } catch (error) {
-    if (error && typeof error === "object" && "digest" in error) {
-      throw error;
-    }
     const errorMessage =
       error instanceof Error ? error.message : "Login failed";
     return { error: errorMessage };
   }
+
+  redirect("/dashboard");
 }
 
 export async function logoutAction() {
   try {
     await serverGraphqlRequest(LogoutDocument);
   } catch (error) {
-    // Ignore errors, still clear cookie and redirect
+    console.error("Error logging out:", error);
   }
-  
+
   clearAuthCookie();
   redirect("/");
 }
