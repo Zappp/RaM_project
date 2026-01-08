@@ -6,7 +6,9 @@ import { AuthenticationError, ValidationError } from "@/lib/errors.ts";
 import { env } from "@/lib/env.ts";
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import { AUTH_COOKIE_NAME } from "@/lib/constants.ts";
-import type { AuthProps, User } from "@/lib/types/auth.ts";
+import type { User } from "@/lib/types/auth.ts";
+import { signupSchema, loginSchema } from "@/lib/validations/auth.ts";
+import { z } from "zod";
 
 export async function getCurrentUser(context: Context): Promise<User | null> {
   const cookieHeader = context.req.header("Cookie") || null;
@@ -43,16 +45,15 @@ export const authResolvers = {
     },
   },
   Mutation: {
-    signup: async (_: unknown, props: AuthProps, _context: GraphQLContext) => {
-      const { email, password } = props;
-
-      if (!email || !password) {
-        throw new ValidationError("Email and password are required");
+    signup: async (_: unknown, props: unknown, _context: GraphQLContext) => {
+      const validationResult = signupSchema.safeParse(props);
+      
+      if (!validationResult.success) {
+        const prettified = z.prettifyError(validationResult.error);
+        throw new ValidationError(prettified);
       }
 
-      if (password.length < 6) {
-        throw new ValidationError("Password must be at least 6 characters");
-      }
+      const { email, password } = validationResult.data;
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -81,12 +82,15 @@ export const authResolvers = {
       };
     },
 
-    login: async (_: unknown, props: AuthProps, context: GraphQLContext) => {
-      const { email, password } = props;
-
-      if (!email || !password) {
-        throw new ValidationError("Email and password are required");
+    login: async (_: unknown, props: unknown, context: GraphQLContext) => {
+      const validationResult = loginSchema.safeParse(props);
+      
+      if (!validationResult.success) {
+        const prettified = z.prettifyError(validationResult.error);
+        throw new ValidationError(prettified);
       }
+
+      const { email, password } = validationResult.data;
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

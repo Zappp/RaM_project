@@ -2,8 +2,8 @@ import { z } from "zod";
 
 const envSchema = z.object({
   SUPABASE_URL: z.url(),
-  SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  SUPABASE_ANON_KEY: z.string().trim().min(1),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().trim().optional(),
   API_URL: z.url().optional(),
   FRONTEND_URL: z.url().optional(),
 });
