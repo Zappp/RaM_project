@@ -1,11 +1,12 @@
 import Link from 'next/link';
 
-export default function AuthErrorPage({
+export default async function AuthErrorPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const error = searchParams.error || 'An error occurred';
+  const params = await searchParams;
+  const error = params.error || 'An error occurred';
 
   return (
     <div>

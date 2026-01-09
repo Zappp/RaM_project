@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { serverGraphqlRequest } from "../graphql/graphqlRequest";
 import {
   FavoriteCharactersDocument,
@@ -13,6 +14,7 @@ import type {
   AddFavoriteCharacterMutation,
   RemoveFavoriteCharacterMutation,
 } from "../types/generated";
+import type { ActionResult } from "../types/actions";
 
 export async function getFavoriteCharacters(page?: number, pageSize?: number) {
   try {
@@ -40,36 +42,83 @@ export async function getFavoriteCharacter(characterId: number) {
   }
 }
 
-export async function addFavoriteCharacter(
-  characterId: number,
-  characterName: string,
-  characterImage?: string | null
-) {
+export async function addFavoriteCharacterAction(
+  _prevState: unknown,
+  formData: FormData
+): Promise<ActionResult> {
+  const characterId = parseInt(formData.get("characterId") as string, 10);
+  const characterName = formData.get("characterName") as string;
+  const characterImage = formData.get("characterImage") as string | null;
+
+  if (!characterId || !characterName) {
+    return { error: "Character ID and name are required" };
+  }
+
   try {
-    const data = await serverGraphqlRequest<AddFavoriteCharacterMutation>(
+    await serverGraphqlRequest<AddFavoriteCharacterMutation>(
       AddFavoriteCharacterDocument,
       {
         characterId,
         characterName,
-        characterImage,
+        characterImage: characterImage || null,
       }
     );
-    return data.addFavoriteCharacter;
+    revalidatePath("/dashboard");
+    revalidatePath("/favorites");
+    return { success: true as const };
   } catch (error) {
-    console.error("Error adding favorite character:", error);
-    return null;
+    return {
+      error: error instanceof Error ? error.message : "Failed to add favorite",
+    };
   }
 }
 
-export async function removeFavoriteCharacter(characterId: number) {
+export async function removeFavoriteCharacterAction(
+  _prevState: unknown,
+  formData: FormData
+): Promise<ActionResult> {
+  const characterId = parseInt(formData.get("characterId") as string, 10);
+
+  if (!characterId) {
+    return { error: "Character ID is required" };
+  }
+
   try {
     await serverGraphqlRequest<RemoveFavoriteCharacterMutation>(
       RemoveFavoriteCharacterDocument,
       { characterId }
     );
-    return true;
+    revalidatePath("/dashboard");
+    revalidatePath("/favorites");
+    return { success: true as const };
   } catch (error) {
-    console.error("Error removing favorite character:", error);
-    return null;
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to remove favorite",
+    };
   }
+}
+
+export async function addFavoriteCharacter(
+  characterId: number,
+  characterName: string,
+  characterImage?: string | null
+) {
+  const data = await serverGraphqlRequest<AddFavoriteCharacterMutation>(
+    AddFavoriteCharacterDocument,
+    {
+      characterId,
+      characterName,
+      characterImage,
+    }
+  );
+  return data.addFavoriteCharacter;
+}
+
+export async function removeFavoriteCharacter(characterId: number) {
+  await serverGraphqlRequest<RemoveFavoriteCharacterMutation>(
+    RemoveFavoriteCharacterDocument,
+    { characterId }
+  );
+  return true;
 }

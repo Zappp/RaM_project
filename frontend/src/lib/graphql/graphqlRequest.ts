@@ -3,9 +3,9 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import { print } from "graphql";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { API_URL } from "../constants";
+import { createSupabaseServerClient } from "../supabase";
 
 export async function serverGraphqlRequest<
   TResult = unknown,
@@ -14,18 +14,21 @@ export async function serverGraphqlRequest<
   document: TypedDocumentNode<TResult, TVariables> | DocumentNode,
   variables?: TVariables
 ): Promise<TResult> {
-  const cookieStore = cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((cookie) => `${cookie.name}=${cookie.value}`)
-    .join("; ");
+  const supabase = await createSupabaseServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const authToken = session?.access_token;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
 
   const response = await fetch(API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-    },
+    headers,
     body: JSON.stringify({
       query: print(document),
       variables,
@@ -48,11 +51,11 @@ export async function serverGraphqlRequest<
   if (result.errors && result.errors.length > 0) {
     const error = result.errors[0];
     const errorMessage = error.message ?? "An error occurred";
-    
+
     if (errorMessage === "Authentication required") {
       redirect("/api/auth/logout");
     }
-    
+
     throw new Error(errorMessage);
   }
 
