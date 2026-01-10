@@ -5,6 +5,7 @@ import type { DocumentNode } from "graphql";
 import { print } from "graphql";
 import { API_URL } from "../constants";
 import { createSupabaseServerClient } from "../supabase";
+import { AuthError, isAuthErrorResponse } from "../errors/AuthError";
 
 export async function serverGraphqlRequest<
   TResult = unknown,
@@ -42,6 +43,9 @@ export async function serverGraphqlRequest<
       `GraphQL request failed: ${response.status} ${response.statusText}`,
       text
     );
+    if (isAuthErrorResponse(response.status)) {
+      throw new AuthError("Authentication required");
+    }
     throw new Error(
       `GraphQL request failed: ${response.status} ${response.statusText}`
     );
@@ -49,25 +53,21 @@ export async function serverGraphqlRequest<
 
   const result = await response.json();
 
-  if (!result) {
-    console.error("Empty response from GraphQL endpoint");
-    throw new Error("Empty response from GraphQL endpoint");
-  }
-
   if (result.errors && result.errors.length > 0) {
     const error = result.errors[0];
     const errorMessage = error.message ?? "An error occurred";
     const errorCode = error.extensions?.code;
+    const statusCode = error.extensions?.statusCode;
+
+    if (isAuthErrorResponse(response.status, errorCode, statusCode)) {
+      throw new AuthError(errorMessage);
+    }
 
     const customError = new Error(errorMessage);
     (customError as any).code = errorCode;
+    (customError as any).statusCode = statusCode;
 
     throw customError;
-  }
-
-  if (!result.data) {
-    console.error("No data in GraphQL response", result);
-    throw new Error("No data in GraphQL response");
   }
 
   return result.data as TResult;

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { serverGraphqlRequest } from "@/lib/graphql/graphqlRequest";
+import { AuthError } from "@/lib/errors/AuthError";
 import { handleAuthError } from "@/features/auth/actions/authErrorHandler";
 import {
   FavoriteCharactersDocument,
@@ -25,8 +26,8 @@ export async function getFavoriteCharacters(page?: number, pageSize?: number) {
     );
     return data.favoriteCharacters;
   } catch (error) {
-    const isAuthError = await handleAuthError(error, false);
-    if (isAuthError) {
+    if (error instanceof AuthError) {
+      await handleAuthError(error);
       return { error: "Authentication required" };
     }
     const errorMessage =
@@ -39,7 +40,6 @@ export async function getFavoriteCharacters(page?: number, pageSize?: number) {
 }
 
 export async function getFavoriteCharactersByIds(characterIds: number[]) {
-  // TODO pagination (?)
   try {
     const data = await serverGraphqlRequest<FavoriteCharactersByIdsQuery>(
       FavoriteCharactersByIdsDocument,
@@ -47,8 +47,8 @@ export async function getFavoriteCharactersByIds(characterIds: number[]) {
     );
     return data.favoriteCharactersByIds;
   } catch (error) {
-    const isAuthError = await handleAuthError(error, false);
-    if (isAuthError) {
+    if (error instanceof AuthError) {
+      await handleAuthError(error);
       return { error: "Authentication required" };
     }
     const errorMessage =
@@ -85,8 +85,8 @@ export async function addFavoriteCharacterAction(
     revalidatePath("/favorites");
     return { success: true as const };
   } catch (error) {
-    const isAuthError = await handleAuthError(error, true);
-    if (isAuthError) {
+    if (error instanceof AuthError) {
+      await handleAuthError(error);
       return { error: "Authentication required" };
     }
 
@@ -116,8 +116,8 @@ export async function removeFavoriteCharacterAction(
     revalidatePath("/favorites");
     return { success: true as const };
   } catch (error) {
-    const isAuthError = await handleAuthError(error, true);
-    if (isAuthError) {
+    if (error instanceof AuthError) {
+      await handleAuthError(error);
       return { error: "Authentication required" };
     }
 

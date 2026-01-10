@@ -2,25 +2,23 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase";
+import { AuthError } from "@/lib/errors/AuthError";
 
 export async function handleAuthError(
   error: unknown,
-  shouldRedirect: boolean = false
-): Promise<boolean> {
-  const errorCode = (error as any)?.code;
-  const errorMessage = error instanceof Error ? error.message : "";
+  shouldRedirect: boolean = true
+): Promise<never | boolean> {
+  if (!(error instanceof AuthError)) {
+    return false;
+  }
 
-  if (errorCode === "UNAUTHENTICATED" || errorMessage === "Authentication required") {
-    const supabase = await createSupabaseServerClient();
-    await supabase.auth.signOut();
-    
-    if (shouldRedirect) {
-      redirect("/");
-    }
-    
-    return true;
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
+  
+  if (shouldRedirect) {
+    redirect("/");
   }
   
-  return false;
+  return true;
 }
 
