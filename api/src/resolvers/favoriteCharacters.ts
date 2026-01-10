@@ -3,8 +3,8 @@ import {
   AuthenticationError,
   NotFoundError,
   ValidationError,
+  isAuthenticationError,
 } from "@/lib/errors.ts";
-import { createAuthenticatedSupabaseClient } from "@/lib/supabase.ts";
 import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
 import type {
   FavoriteCharacter,
@@ -21,22 +21,25 @@ async function getFavoriteCharacters(
   context: GraphQLContext,
   props: Required<PaginationProps>
 ): Promise<PaginatedResult<FavoriteCharacter>> {
-  if (!context.user) {
+  const { user, supabase } = context;
+  if (!user) {
     throw new AuthenticationError();
   }
 
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = props;
   const offset = (page - 1) * pageSize;
-  const authClient = createAuthenticatedSupabaseClient(context);
 
-  const { data, error, count } = await authClient
+  const { data, error, count } = await supabase
     .from("favorite_characters")
     .select("*", { count: "exact" })
-    .eq("user_id", context.user.id)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .range(offset, offset + pageSize - 1);
 
   if (error) {
+    if (isAuthenticationError(error)) {
+      throw new AuthenticationError();
+    }
     console.error("Error fetching favorite characters:", error);
     throw new Error("Failed to fetch favorite characters");
   }
@@ -73,23 +76,23 @@ async function getFavoriteCharacter(
   context: GraphQLContext,
   props: FavoriteCharacterIdProps
 ): Promise<FavoriteCharacter | null> {
-  if (!context.user) {
+  const { user, supabase } = context;
+  if (!user) {
     throw new AuthenticationError();
   }
 
   const { characterId } = props;
-  const authClient = createAuthenticatedSupabaseClient(context);
 
-  const { data, error } = await authClient
+  const { data, error } = await supabase
     .from("favorite_characters")
     .select("*")
-    .eq("user_id", context.user.id)
+    .eq("user_id", user.id)
     .eq("character_id", characterId)
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") {
-      return null;
+    if (isAuthenticationError(error)) {
+      throw new AuthenticationError();
     }
     console.error("Error fetching favorite character:", error);
     throw new Error("Failed to fetch favorite character");
@@ -112,22 +115,67 @@ async function getFavoriteCharacter(
   };
 }
 
+async function getFavoriteCharactersByIds(
+  context: GraphQLContext,
+  props: { characterIds: number[] }
+): Promise<FavoriteCharacter[]> {
+  const { user, supabase } = context;
+  if (!user) {
+    throw new AuthenticationError();
+  }
+
+  const { characterIds } = props;
+
+  if (characterIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("favorite_characters")
+    .select("*")
+    .eq("user_id", user.id)
+    .in("character_id", characterIds);
+
+  if (error) {
+    if (isAuthenticationError(error)) {
+      throw new AuthenticationError();
+    }
+    console.error("Error fetching favorite characters by IDs:", error);
+    throw new Error("Failed to fetch favorite characters");
+  }
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    characterId: row.character_id,
+    characterName: row.character_name,
+    characterImage: row.character_image || null,
+    characterStatus: row.character_status || null,
+    characterSpecies: row.character_species || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+}
+
 async function addFavoriteCharacter(
   context: GraphQLContext,
   props: Required<AddFavoriteCharacterProps>
 ): Promise<FavoriteCharacter> {
-  if (!context.user) {
+  const { user, supabase } = context;
+
+  if (!user) {
     throw new AuthenticationError();
   }
 
   const { characterId, characterName, characterImage = null } = props;
-  
-  // Fetch character data from Rick and Morty API to get status and species
+
   let characterStatus: string | null = null;
   let characterSpecies: string | null = null;
-  
+
   try {
-    const response = await fetch(`${RICK_AND_MORTY_API_URL}/character/${characterId}`);
+    const response = await fetch(
+      `${RICK_AND_MORTY_API_URL}/character/${characterId}`
+    );
     if (response.ok) {
       const characterData = await response.json();
       characterStatus = characterData.status || null;
@@ -135,15 +183,12 @@ async function addFavoriteCharacter(
     }
   } catch (error) {
     console.error("Error fetching character data:", error);
-    // Continue without status/species if API call fails
   }
-  
-  const authClient = createAuthenticatedSupabaseClient(context);
 
-  const { data, error } = await authClient
+  const { data, error } = await supabase
     .from("favorite_characters")
     .insert({
-      user_id: context.user.id,
+      user_id: user.id,
       character_id: characterId,
       character_name: characterName,
       character_image: characterImage ?? null,
@@ -154,8 +199,8 @@ async function addFavoriteCharacter(
     .single();
 
   if (error) {
-    if (error.code === "23505") {
-      throw new ValidationError("Character is already in favorites");
+    if (isAuthenticationError(error)) {
+      throw new AuthenticationError();
     }
     console.error("Error adding favorite character:", error);
     throw new Error("Failed to add favorite character");
@@ -182,24 +227,27 @@ async function removeFavoriteCharacter(
   context: GraphQLContext,
   props: FavoriteCharacterIdProps
 ): Promise<boolean> {
-  if (!context.user) {
+  const { user, supabase } = context;
+  if (!user) {
     throw new AuthenticationError();
   }
 
   const { characterId } = props;
-  const authClient = createAuthenticatedSupabaseClient(context);
 
-  const { error } = await authClient
+  const { error } = await supabase
     .from("favorite_characters")
     .delete()
-    .eq("user_id", context.user.id)
+    .eq("user_id", user.id)
     .eq("character_id", characterId);
 
   if (error) {
+    if (isAuthenticationError(error)) {
+      throw new AuthenticationError();
+    }
     console.error("Error removing favorite character:", error);
     throw new Error("Failed to remove favorite character");
   }
-  
+
   return true;
 }
 
@@ -229,6 +277,14 @@ export const favoriteCharactersResolvers = {
       context: GraphQLContext
     ): Promise<FavoriteCharacter | null> => {
       return await getFavoriteCharacter(context, props);
+    },
+
+    favoriteCharactersByIds: async (
+      _: unknown,
+      props: { characterIds: number[] },
+      context: GraphQLContext
+    ): Promise<FavoriteCharacter[]> => {
+      return await getFavoriteCharactersByIds(context, props);
     },
   },
 

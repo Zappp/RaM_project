@@ -1,8 +1,8 @@
-import { supabase } from "./supabase.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CachedUser, User } from "./types/auth.ts";
 
 const cache = new Map<string, CachedUser>();
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 60 * 1000;
 
 function cleanupCache() {
   const now = Date.now();
@@ -15,26 +15,24 @@ function cleanupCache() {
 
 setInterval(cleanupCache, 60 * 1000);
 
-export async function validateJWT(token: string): Promise<User | null> {
+export async function validateJWT(
+  token: string,
+  supabase: SupabaseClient
+): Promise<User | null> {
   const cached = cache.get(token);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.user;
   }
 
   try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
+    const { data, error } = await supabase.auth.getClaims(token);
 
-    if (error || !user) {
+    if (error || !data?.claims) {
       return null;
     }
 
-    const userData = {
-      id: user.id,
-      email: user.email,
-      emailVerified: Boolean(user.user_metadata.email_verified),
+    const userData: User = {
+      id: data.claims.sub,
     };
 
     cache.set(token, {

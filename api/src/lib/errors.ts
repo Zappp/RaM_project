@@ -1,3 +1,5 @@
+import { isAuthApiError } from "@supabase/supabase-js";
+
 export class GraphQLError extends Error {
   constructor(
     message: string,
@@ -59,5 +61,41 @@ export function formatGraphQLError(error: unknown): {
   return {
     message: "An unexpected error occurred",
   };
+}
+
+export function isAuthenticationError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  if ("status" in error && error.status === 401) {
+    return true;
+  }
+
+  if ("code" in error) {
+    const code = error.code as string;
+    if (code === "PGRST301" || code === "PGRST302") {
+      return true;
+    }
+  }
+
+  if (isAuthApiError(error)) {
+    const authError = error as { status?: number; code?: string };
+    if (authError.status === 401) {
+      return true;
+    }
+  }
+  if ("message" in error) {
+    const message = String(error.message).toLowerCase();
+    if (
+      message.includes("jwt") ||
+      message.includes("unauthorized") ||
+      message.includes("unauthenticated")
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
