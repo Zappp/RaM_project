@@ -1,21 +1,21 @@
 "use client";
 
 import { useActionState } from "react";
-import { loginAction } from "@/lib/actions/auth";
+import { signupAction } from "../actions/auth";
 import type { ActionResult } from "@/lib/types/actions";
 
-export function LoginForm() {
+export function SignupForm() {
   const [state, formAction] = useActionState<ActionResult, FormData>(
-    loginAction,
+    signupAction,
     null
   );
 
   return (
     <form action={formAction}>
       <div>
-        <label htmlFor="login-email">Email:</label>
+        <label htmlFor="signup-email">Email:</label>
         <input
-          id="login-email"
+          id="signup-email"
           name="email"
           type="email"
           required
@@ -23,9 +23,9 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label htmlFor="login-password">Password:</label>
+        <label htmlFor="signup-password">Password:</label>
         <input
-          id="login-password"
+          id="signup-password"
           name="password"
           type="password"
           required
@@ -33,8 +33,9 @@ export function LoginForm() {
       </div>
 
       {state && "error" in state && <div>{state.error}</div>}
+      {state && "success" in state && state.message && <div>{state.message}</div>}
 
-      <button type="submit">Login</button>
+      <button type="submit">Signup</button>
     </form>
   );
 }

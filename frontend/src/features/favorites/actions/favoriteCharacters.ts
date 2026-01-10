@@ -1,20 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { serverGraphqlRequest } from "../graphql/graphqlRequest";
+import { serverGraphqlRequest } from "@/lib/graphql/graphqlRequest";
+import { handleAuthError } from "@/features/auth/actions/authErrorHandler";
 import {
   FavoriteCharactersDocument,
-  FavoriteCharacterDocument,
+  FavoriteCharactersByIdsDocument,
   AddFavoriteCharacterDocument,
   RemoveFavoriteCharacterDocument,
-} from "../types/generated";
+} from "@/lib/types/generated";
 import type {
   FavoriteCharactersQuery,
-  FavoriteCharacterQuery,
+  FavoriteCharactersByIdsQuery,
   AddFavoriteCharacterMutation,
   RemoveFavoriteCharacterMutation,
-} from "../types/generated";
-import type { ActionResult } from "../types/actions";
+} from "@/lib/types/generated";
+import type { ActionResult } from "@/lib/types/actions";
 
 export async function getFavoriteCharacters(page?: number, pageSize?: number) {
   try {
@@ -24,21 +25,38 @@ export async function getFavoriteCharacters(page?: number, pageSize?: number) {
     );
     return data.favoriteCharacters;
   } catch (error) {
+    const isAuthError = await handleAuthError(error, false);
+    if (isAuthError) {
+      return { error: "Authentication required" };
+    }
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Failed to fetch favorite characters";
     console.error("Error fetching favorite characters:", error);
-    return null;
+    return { error: errorMessage };
   }
 }
 
-export async function getFavoriteCharacter(characterId: number) {
+export async function getFavoriteCharactersByIds(characterIds: number[]) {
+  // TODO pagination (?)
   try {
-    const data = await serverGraphqlRequest<FavoriteCharacterQuery>(
-      FavoriteCharacterDocument,
-      { characterId }
+    const data = await serverGraphqlRequest<FavoriteCharactersByIdsQuery>(
+      FavoriteCharactersByIdsDocument,
+      { characterIds }
     );
-    return data.favoriteCharacter;
+    return data.favoriteCharactersByIds;
   } catch (error) {
-    console.error("Error fetching favorite character:", error);
-    return null;
+    const isAuthError = await handleAuthError(error, false);
+    if (isAuthError) {
+      return { error: "Authentication required" };
+    }
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Failed to fetch favorite characters";
+    console.error("Error fetching favorite characters by IDs:", error);
+    return { error: errorMessage };
   }
 }
 
@@ -67,8 +85,14 @@ export async function addFavoriteCharacterAction(
     revalidatePath("/favorites");
     return { success: true as const };
   } catch (error) {
+    const isAuthError = await handleAuthError(error, true);
+    if (isAuthError) {
+      return { error: "Authentication required" };
+    }
+
+    const errorMessage = error instanceof Error ? error.message : "";
     return {
-      error: error instanceof Error ? error.message : "Failed to add favorite",
+      error: errorMessage || "Failed to add favorite",
     };
   }
 }
@@ -92,33 +116,14 @@ export async function removeFavoriteCharacterAction(
     revalidatePath("/favorites");
     return { success: true as const };
   } catch (error) {
+    const isAuthError = await handleAuthError(error, true);
+    if (isAuthError) {
+      return { error: "Authentication required" };
+    }
+
+    const errorMessage = error instanceof Error ? error.message : "";
     return {
-      error:
-        error instanceof Error ? error.message : "Failed to remove favorite",
+      error: errorMessage || "Failed to remove favorite",
     };
   }
-}
-
-export async function addFavoriteCharacter(
-  characterId: number,
-  characterName: string,
-  characterImage?: string | null
-) {
-  const data = await serverGraphqlRequest<AddFavoriteCharacterMutation>(
-    AddFavoriteCharacterDocument,
-    {
-      characterId,
-      characterName,
-      characterImage,
-    }
-  );
-  return data.addFavoriteCharacter;
-}
-
-export async function removeFavoriteCharacter(characterId: number) {
-  await serverGraphqlRequest<RemoveFavoriteCharacterMutation>(
-    RemoveFavoriteCharacterDocument,
-    { characterId }
-  );
-  return true;
 }

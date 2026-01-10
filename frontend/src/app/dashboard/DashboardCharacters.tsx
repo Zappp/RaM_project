@@ -1,6 +1,7 @@
-import { getCharacters } from "@/lib/actions/characters";
-import { getFavoriteCharacter } from "@/lib/actions/favoriteCharacters";
-import { CharactersList } from "@/components/characters/CharactersList";
+import { getCharacters } from "@/features/characters/actions/characters";
+import { getFavoriteCharactersByIds } from "@/features/favorites/actions/favoriteCharacters";
+import { CharactersList } from "@/features/characters/components/CharactersList";
+import type { CharactersQuery } from "@/lib/types/generated";
 
 export async function DashboardCharacters({
   searchParams,
@@ -20,25 +21,21 @@ export async function DashboardCharacters({
     );
   }
 
-  const favoriteChecks = await Promise.all(
-    charactersData.results.map(async (character) => {
-      const characterId = parseInt(character.id, 10);
-      try {
-        const favorite = await getFavoriteCharacter(characterId);
-        return { characterId, isFavorite: !!favorite };
-      } catch {
-        return { characterId, isFavorite: false };
-      }
-    })
+  const characterIds = charactersData.results.map((character: { id: string }) =>
+    parseInt(character.id, 10)
+  );
+  const favoritesResult = await getFavoriteCharactersByIds(characterIds);
+  
+  const favorites =
+    favoritesResult && !("error" in favoritesResult) ? favoritesResult : [];
+  const favoriteCharacterIds = new Set(
+    favorites.map((favorite: { characterId: number }) => favorite.characterId)
   );
 
-  const favoriteMap = new Map(
-    favoriteChecks.map((check) => [check.characterId, check.isFavorite])
-  );
-
-  const charactersWithFavorites = charactersData.results.map((character) => ({
+  type Character = CharactersQuery["characters"]["results"][0];
+  const charactersWithFavorites = charactersData.results.map((character: Character) => ({
     ...character,
-    isFavorite: favoriteMap.get(parseInt(character.id, 10)) || false,
+    isFavorite: favoriteCharacterIds.has(parseInt(character.id, 10)),
   }));
 
   return (

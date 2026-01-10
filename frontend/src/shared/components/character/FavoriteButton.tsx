@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useOptimistic, useEffect, useRef, startTransition } from "react";
 import {
   addFavoriteCharacterAction,
   removeFavoriteCharacterAction,
-} from "@/lib/actions/favoriteCharacters";
+} from "@/features/favorites/actions/favoriteCharacters";
 import type { ActionResult } from "@/lib/types/actions";
 
 interface FavoriteButtonProps {
@@ -24,7 +24,8 @@ export function FavoriteButton({
   canAdd = true,
   canRemove = true,
 }: FavoriteButtonProps) {
-  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
+  const isRequestInFlight = useRef(false);
+  
   const [addState, addAction, isAddPending] = useActionState<
     ActionResult,
     FormData
@@ -34,23 +35,54 @@ export function FavoriteButton({
     FormData
   >(removeFavoriteCharacterAction, null);
 
-  const isPending = isAddPending || isRemovePending;
+  const [optimisticFavorite, setOptimisticFavorite] = useOptimistic(
+    initialIsFavorite,
+    (_currentState, optimisticValue: boolean) => optimisticValue
+  );
+
+  const isPending = isAddPending || isRemovePending || isRequestInFlight.current;
+  const isFavorite = optimisticFavorite;
+
+  useEffect(() => {
+    if (initialIsFavorite !== optimisticFavorite && !isPending) {
+      startTransition(() => {
+        setOptimisticFavorite(initialIsFavorite);
+      });
+    }
+  }, [initialIsFavorite, optimisticFavorite, isPending, setOptimisticFavorite]);
 
   useEffect(() => {
     if (addState && "success" in addState) {
-      setIsFavorite(true);
+      isRequestInFlight.current = false;
     } else if (addState && "error" in addState) {
-      setIsFavorite(false);
+      isRequestInFlight.current = false;
+      startTransition(() => {
+        setOptimisticFavorite(initialIsFavorite);
+      });
     }
-  }, [addState]);
+  }, [addState, initialIsFavorite, setOptimisticFavorite]);
 
   useEffect(() => {
     if (removeState && "success" in removeState) {
-      setIsFavorite(false);
+      isRequestInFlight.current = false;
     } else if (removeState && "error" in removeState) {
-      setIsFavorite(true);
+      isRequestInFlight.current = false;
+      startTransition(() => {
+        setOptimisticFavorite(initialIsFavorite);
+      });
     }
-  }, [removeState]);
+  }, [removeState, initialIsFavorite, setOptimisticFavorite]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (isRequestInFlight.current || isPending) {
+      e.preventDefault();
+      return;
+    }
+    isRequestInFlight.current = true;
+    startTransition(() => {
+      setOptimisticFavorite(!isFavorite);
+    });
+  };
 
   const error =
     (addState && "error" in addState ? addState.error : undefined) ||
@@ -67,14 +99,14 @@ export function FavoriteButton({
   return (
     <div>
       {isFavorite ? (
-        <form action={removeAction}>
+        <form action={removeAction} onSubmit={handleSubmit}>
           <input type="hidden" name="characterId" value={characterId} />
           <button type="submit" disabled={isPending}>
             {isPending ? "..." : "★ Remove Favorite"}
           </button>
         </form>
       ) : (
-        <form action={addAction}>
+        <form action={addAction} onSubmit={handleSubmit}>
           <input type="hidden" name="characterId" value={characterId} />
           <input type="hidden" name="characterName" value={characterName} />
           <input
@@ -91,3 +123,4 @@ export function FavoriteButton({
     </div>
   );
 }
+

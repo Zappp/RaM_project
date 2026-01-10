@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/layout/Navbar";
+import { Navbar } from "@/shared/components/Navbar";
 
 export default function FavoritesLayout({
   children,

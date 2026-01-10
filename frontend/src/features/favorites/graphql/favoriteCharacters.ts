@@ -40,6 +40,22 @@ export const FavoriteCharacterQuery = gql`
   }
 `;
 
+export const FavoriteCharactersByIdsQuery = gql`
+  query FavoriteCharactersByIds($characterIds: [Int!]!) {
+    favoriteCharactersByIds(characterIds: $characterIds) {
+      id
+      userId
+      characterId
+      characterName
+      characterImage
+      characterStatus
+      characterSpecies
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 export const AddFavoriteCharacterMutation = gql`
   mutation AddFavoriteCharacter($characterId: Int!, $characterName: String!, $characterImage: String) {
     addFavoriteCharacter(characterId: $characterId, characterName: $characterName, characterImage: $characterImage) {

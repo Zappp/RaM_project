@@ -1,18 +1,14 @@
-import Link from 'next/link';
+import { Suspense } from "react";
+import { AuthErrorContent } from "./AuthErrorContent";
 
-export default async function AuthErrorPage({
+export default function AuthErrorPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const params = await searchParams;
-  const error = params.error || 'An error occurred';
-
   return (
-    <div>
-      <h1>Authentication Error</h1>
-      <p>{decodeURIComponent(error)}</p>
-      <Link href="/">Go back to home</Link>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthErrorContent searchParams={searchParams} />
+    </Suspense>
   );
 }

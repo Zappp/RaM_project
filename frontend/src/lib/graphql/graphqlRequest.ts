@@ -3,7 +3,6 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import { print } from "graphql";
-import { redirect } from "next/navigation";
 import { API_URL } from "../constants";
 import { createSupabaseServerClient } from "../supabase";
 
@@ -15,7 +14,9 @@ export async function serverGraphqlRequest<
   variables?: TVariables
 ): Promise<TResult> {
   const supabase = await createSupabaseServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const authToken = session?.access_token;
 
   const headers: Record<string, string> = {
@@ -37,8 +38,13 @@ export async function serverGraphqlRequest<
 
   if (!response.ok) {
     const text = await response.text();
-    console.error(`GraphQL request failed: ${response.status} ${response.statusText}`, text);
-    throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`);
+    console.error(
+      `GraphQL request failed: ${response.status} ${response.statusText}`,
+      text
+    );
+    throw new Error(
+      `GraphQL request failed: ${response.status} ${response.statusText}`
+    );
   }
 
   const result = await response.json();
@@ -51,12 +57,12 @@ export async function serverGraphqlRequest<
   if (result.errors && result.errors.length > 0) {
     const error = result.errors[0];
     const errorMessage = error.message ?? "An error occurred";
+    const errorCode = error.extensions?.code;
 
-    if (errorMessage === "Authentication required") {
-      redirect("/api/auth/logout");
-    }
+    const customError = new Error(errorMessage);
+    (customError as any).code = errorCode;
 
-    throw new Error(errorMessage);
+    throw customError;
   }
 
   if (!result.data) {

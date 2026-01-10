@@ -37,4 +37,3 @@ export async function GET(request: NextRequest) {
 
   redirect(`/auth/error?error=${encodeURIComponent("No token hash or type")}`);
 }
-

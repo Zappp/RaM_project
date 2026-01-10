@@ -45,6 +45,17 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith(route)
   );
 
+  if (!user && isProtectedRoute) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    const redirectResponse = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  }
+
   if (user && (pathname === "/" || pathname.startsWith("/auth"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
@@ -55,16 +66,5 @@ export async function updateSession(request: NextRequest) {
     return redirectResponse;
   }
 
-  if (!user && isProtectedRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    const redirectResponse = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value);
-    });
-    return redirectResponse;
-  }
-
   return supabaseResponse;
 }
-

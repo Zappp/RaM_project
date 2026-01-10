@@ -1,10 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "../supabase";
+import { createSupabaseServerClient } from "@/lib/supabase";
 import { signupSchema, loginSchema } from "../validations/auth";
 import { z } from "zod";
-import type { ActionResult } from "../types/actions";
+import type { ActionResult } from "@/lib/types/actions";
 
 export async function signupAction(
   _prevState: unknown,

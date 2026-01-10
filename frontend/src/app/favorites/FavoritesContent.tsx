@@ -1,5 +1,5 @@
-import { getFavoriteCharacters } from "@/lib/actions/favoriteCharacters";
-import { FavoritesList } from "@/components/favorites/FavoritesList";
+import { getFavoriteCharacters } from "@/features/favorites/actions/favoriteCharacters";
+import { FavoritesList } from "@/features/favorites/components/FavoritesList";
 
 export async function FavoritesContent({
   searchParams,
@@ -10,7 +10,7 @@ export async function FavoritesContent({
   const page = params.page ? parseInt(params.page, 10) : 1;
   const favoritesData = await getFavoriteCharacters(page);
 
-  if (!favoritesData) {
+  if (!favoritesData || "error" in favoritesData) {
     return (
       <div>
         <p>Failed to load favorites. Please try again later.</p>

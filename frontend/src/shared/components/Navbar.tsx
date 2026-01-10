@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoutButton } from "@/components/auth/LogoutButton";
+import { LogoutButton } from "@/features/auth/components/LogoutButton";
 
 export function Navbar() {
   return (
