@@ -66,7 +66,7 @@ Deno.test("GraphQL server - handles query", async () => {
   assertEquals(result.data.__typename, "Query");
 });
 
-Deno.test("GraphQL server - me query requires authentication", async () => {
+Deno.test("GraphQL server - favoriteCharacters query requires authentication", async () => {
   const yoga = createGraphQLServer();
   const mockContext = createMockContext();
 
@@ -77,9 +77,11 @@ Deno.test("GraphQL server - me query requires authentication", async () => {
     },
     body: JSON.stringify({
       query: `query {
-        me {
-          id
-          email
+        favoriteCharacters {
+          results {
+            id
+            characterId
+          }
         }
       }`,
     }),

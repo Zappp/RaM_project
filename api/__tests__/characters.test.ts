@@ -3,6 +3,7 @@ import { charactersResolvers } from "@/resolvers/characters.ts";
 import { NotFoundError } from "@/lib/errors.ts";
 import type { Character } from "@/lib/types/character.ts";
 import { createMockContext, mockFetch } from "./utils.ts";
+import { createSupabaseClient } from "@/lib/supabase.ts";
 
 Deno.test("charactersResolvers.Query.characters - returns paginated characters", async () => {
   const mockResponse = {
@@ -31,7 +32,8 @@ Deno.test("charactersResolvers.Query.characters - returns paginated characters",
 
   globalThis.fetch = mockFetch(mockResponse);
 
-  const context = createMockContext();
+  const supabase = createSupabaseClient(null);
+  const context = createMockContext(supabase);
   const result = await charactersResolvers.Query.characters(undefined, {}, context);
 
   assertEquals(result.results.length, 1);
@@ -70,7 +72,8 @@ Deno.test("charactersResolvers.Query.characters - handles pagination with page p
 
   globalThis.fetch = mockFetch(mockResponse);
 
-  const context = createMockContext();
+  const supabase = createSupabaseClient(null);
+  const context = createMockContext(supabase);
   const result = await charactersResolvers.Query.characters(undefined, { page: 2 }, context);
 
   assertEquals(result.info.next, 3);
@@ -84,7 +87,8 @@ Deno.test("charactersResolvers.Query.characters - handles API errors", async () 
   };
   globalThis.fetch = mockFetch(emptyResponse, false);
 
-  const context = createMockContext();
+  const supabase = createSupabaseClient(null);
+  const context = createMockContext(supabase);
 
   await assertRejects(
     async () => {
@@ -112,7 +116,8 @@ Deno.test("charactersResolvers.Query.character - returns single character by id"
 
   globalThis.fetch = mockFetch(mockCharacter);
 
-  const context = createMockContext();
+  const supabase = createSupabaseClient(null);
+  const context = createMockContext(supabase);
   const result = await charactersResolvers.Query.character(undefined, { id: "1" }, context);
 
   assertEquals(result.id, 1);
@@ -138,7 +143,8 @@ Deno.test("charactersResolvers.Query.character - throws NotFoundError for invali
   };
   globalThis.fetch = mockFetch(emptyCharacter, false);
 
-  const context = createMockContext();
+  const supabase = createSupabaseClient(null);
+  const context = createMockContext(supabase);
 
   await assertRejects(
     async () => {
@@ -166,7 +172,8 @@ Deno.test("charactersResolvers.Query.character - handles null origin and locatio
 
   globalThis.fetch = mockFetch(mockCharacter);
 
-  const context = createMockContext();
+  const supabase = createSupabaseClient(null);
+  const context = createMockContext(supabase);
   const result = await charactersResolvers.Query.character(undefined, { id: "100" }, context);
 
   assertEquals(result.origin?.name, "unknown");

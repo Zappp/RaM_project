@@ -1,7 +1,9 @@
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import type { Context } from "hono";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseClient } from "@/lib/supabase.ts";
 
-export function createMockContext(): GraphQLContext {
+export function createMockContext(supabase?: SupabaseClient): GraphQLContext {
   const mockHonoContext = {
     req: {
       header: () => undefined,
@@ -12,6 +14,7 @@ export function createMockContext(): GraphQLContext {
   return {
     context: mockHonoContext,
     user: null,
+    supabase: supabase ?? createSupabaseClient(null),
   };
 }
 
