@@ -26,9 +26,10 @@ export const favoriteCharactersTypeDefs = `
   extend type Query {
     favoriteCharacters(page: Int, pageSize: Int): FavoriteCharactersResponse!
     favoriteCharacter(characterId: Int!): FavoriteCharacter
+    favoriteCharactersByIds(characterIds: [Int!]!): [FavoriteCharacter!]!
   }
 
-  extend type Mutation {
+  type Mutation {
     addFavoriteCharacter(characterId: Int!, characterName: String!, characterImage: String): FavoriteCharacter!
     removeFavoriteCharacter(characterId: Int!): Boolean!
   }

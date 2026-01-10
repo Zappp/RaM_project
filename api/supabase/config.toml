@@ -146,13 +146,12 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-# For edge functions, this should point to your edge function URL
-site_url = "http://127.0.0.1:54321/functions/v1/graphql"
+# For edge functions, this should point to your edge function callback URL
+site_url = "http://localhost:3000/auth/verify-email"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-# Edge function auth callback URL
 additional_redirect_urls = [
-  "http://localhost:54321/functions/v1/graphql/auth/callback",
-  "http://127.0.0.1:54321/functions/v1/graphql/auth/callback"
+  "http://localhost:3000/auth/verify-email",
+  "http://127.0.0.1:3000/auth/verify-email"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -366,7 +365,7 @@ inspector_port = 8083
 deno_version = 2
 
 # Edge function configuration
-# Disable JWT verification for local development
+# Disable JWT verification - we handle it manually via supabase.auth.getUser()
 [functions.graphql]
 verify_jwt = false
 

@@ -8,13 +8,13 @@
     "npm:@graphql-tools/schema@^10.0.30": "10.0.31_graphql@16.12.0",
     "npm:@graphql-tools/utils@^10.11.0": "10.11.0_graphql@16.12.0",
     "npm:@supabase/auth-js@2.89.0": "2.89.0",
-    "npm:@supabase/auth-js@^2.89.0": "2.89.0",
+    "npm:@supabase/auth-js@^2.89.0": "2.90.1",
     "npm:@supabase/postgrest-js@2.89.0": "2.89.0",
-    "npm:@supabase/postgrest-js@^2.89.0": "2.89.0",
+    "npm:@supabase/postgrest-js@^2.89.0": "2.90.1",
     "npm:@supabase/realtime-js@2.89.0": "2.89.0",
-    "npm:@supabase/realtime-js@^2.89.0": "2.89.0",
+    "npm:@supabase/realtime-js@^2.89.0": "2.90.1",
     "npm:@supabase/storage-js@2.89.0": "2.89.0",
-    "npm:@supabase/storage-js@^2.89.0": "2.89.0",
+    "npm:@supabase/storage-js@^2.89.0": "2.90.1",
     "npm:graphql-yoga@^5.18.0": "5.18.0_graphql@16.12.0",
     "npm:graphql@^16.8.1": "16.12.0",
     "npm:zod@4": "4.3.5"
@@ -156,8 +156,20 @@
         "tslib"
       ]
     },
+    "@supabase/auth-js@2.90.1": {
+      "integrity": "sha512-vxb66dgo6h3yyPbR06735Ps+dK3hj0JwS8w9fdQPVZQmocSTlKUW5MfxSy99mN0XqCCuLMQ3jCEiIIUU23e9ng==",
+      "dependencies": [
+        "tslib"
+      ]
+    },
     "@supabase/postgrest-js@2.89.0": {
       "integrity": "sha512-/b0fKrxV9i7RNOEXMno/I1862RsYhuUo+Q6m6z3ar1f4ulTMXnDfv0y4YYxK2POcgrOXQOgKYQx1eArybyNvtg==",
+      "dependencies": [
+        "tslib"
+      ]
+    },
+    "@supabase/postgrest-js@2.90.1": {
+      "integrity": "sha512-jh6vqzaYzoFn3raaC0hcFt9h+Bt+uxNRBSdc7PfToQeRGk7PDPoweHsbdiPWREtDVTGKfu+PyPW9e2jbK+BCgQ==",
       "dependencies": [
         "tslib"
       ]
@@ -171,8 +183,24 @@
         "ws"
       ]
     },
+    "@supabase/realtime-js@2.90.1": {
+      "integrity": "sha512-PWbnEMkcQRuor8jhObp4+Snufkq8C6fBp+MchVp2qBPY1NXk/c3Iv3YyiFYVzo0Dzuw4nAlT4+ahuPggy4r32w==",
+      "dependencies": [
+        "@types/phoenix",
+        "@types/ws",
+        "tslib",
+        "ws"
+      ]
+    },
     "@supabase/storage-js@2.89.0": {
       "integrity": "sha512-6zKcXofk/M/4Eato7iqpRh+B+vnxeiTumCIP+Tz26xEqIiywzD9JxHq+udRrDuv6hXE+pmetvJd8n5wcf4MFRQ==",
+      "dependencies": [
+        "iceberg-js",
+        "tslib"
+      ]
+    },
+    "@supabase/storage-js@2.90.1": {
+      "integrity": "sha512-GHY+Ps/K/RBfRj7kwx+iVf2HIdqOS43rM2iDOIDpapyUnGA9CCBFzFV/XvfzznGykd//z2dkGZhlZZprsVFqGg==",
       "dependencies": [
         "iceberg-js",
         "tslib"

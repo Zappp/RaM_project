@@ -30,7 +30,7 @@ export const charactersTypeDefs = `
     info: PageInfo!
   }
 
-  extend type Query {
+  type Query {
     characters(page: Int): CharactersResponse!
     character(id: ID!): Character
   }
