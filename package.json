@@ -4,10 +4,8 @@
   "private": true,
   "description": "Rick & Morty app with React, Supabase, and GraphQL",
   "scripts": {
-    "install:api": "cd api && deno cache --node-modules-dir --lock deno.lock --reload supabase/functions/graphql/index.ts",
-    "build:api": "cd api && supabase functions deploy graphql",
-    "test:api": "cd api && deno task test",
-    "check:api": "cd api && deno task check"
+    "api": "cd api && deno task cache && deno task dev",
+    "frontend": "cd frontend && pnpm install && pnpm dev"
   },
   "engines": {
     "node": ">=18.0.0"
