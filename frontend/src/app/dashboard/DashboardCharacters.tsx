@@ -14,9 +14,9 @@ export async function DashboardCharacters({
 
   if (!charactersData) {
     return (
-      <div>
-        <h1>Error loading characters</h1>
-        <p>Failed to load characters. Please try again later.</p>
+      <div role="alert">
+        <h2 className="text-xl font-semibold text-text mb-2">Error loading characters</h2>
+        <p className="text-text-muted">Failed to load characters. Please try again later.</p>
       </div>
     );
   }
