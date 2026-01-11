@@ -11,4 +11,3 @@ export function isAuthError(error: unknown): boolean {
     errorMessage.includes("Unauthorized")
   );
 }
-

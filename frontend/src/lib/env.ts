@@ -1,3 +1,5 @@
+"server-only";
+
 import { z } from "zod";
 import { config as loadEnv } from "dotenv";
 import { resolve } from "path";

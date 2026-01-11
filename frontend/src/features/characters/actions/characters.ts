@@ -8,10 +8,7 @@ import type { CharactersQuery } from "@/lib/types/generated";
 
 export async function getCharacters(page?: number) {
   try {
-    const data = await serverGraphqlRequest<CharactersQuery>(
-      CharactersDocument,
-      { page }
-    );
+    const data = await serverGraphqlRequest<CharactersQuery>(CharactersDocument, { page });
     return data.characters;
   } catch (error) {
     if (error instanceof AuthError) {

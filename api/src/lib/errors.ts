@@ -1,4 +1,17 @@
-import { isAuthApiError } from "@supabase/supabase-js";
+import {
+  isAuthError,
+  isAuthApiError,
+  isAuthSessionMissingError,
+  AuthInvalidJwtError,
+  AuthInvalidCredentialsError,
+} from "@supabase/auth-js";
+import { PostgrestError } from "@supabase/postgrest-js";
+
+export type NormalizedErrorResponse = {
+  message: string;
+  code: string;
+  statusCode: number;
+};
 
 export class GraphQLError extends Error {
   constructor(
@@ -39,63 +52,72 @@ export class NotFoundError extends GraphQLError {
   }
 }
 
-export function formatGraphQLError(error: unknown): {
-  message: string;
-  code?: string;
-  statusCode?: number;
-} {
-  if (error instanceof GraphQLError) {
-    return {
-      message: error.message,
-      code: error.code,
-      statusCode: error.statusCode,
-    };
+export class InternalServerError extends GraphQLError {
+  constructor(message: string = "Internal server error") {
+    super(message, "INTERNAL_SERVER_ERROR", 500);
+    this.name = "InternalServerError";
   }
-
-  if (error instanceof Error) {
-    return {
-      message: error.message,
-    };
-  }
-
-  return {
-    message: "An unexpected error occurred",
-  };
 }
 
-export function isAuthenticationError(error: unknown): boolean {
-  if (!error || typeof error !== "object") {
-    return false;
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === "object" && "message" in error) {
+    return String(error.message) || fallback;
   }
-
-  if ("status" in error && error.status === 401) {
-    return true;
-  }
-
-  if ("code" in error) {
-    const code = error.code as string;
-    if (code === "PGRST301" || code === "PGRST302") {
-      return true;
-    }
-  }
-
-  if (isAuthApiError(error)) {
-    const authError = error as { status?: number; code?: string };
-    if (authError.status === 401) {
-      return true;
-    }
-  }
-  if ("message" in error) {
-    const message = String(error.message).toLowerCase();
-    if (
-      message.includes("jwt") ||
-      message.includes("unauthorized") ||
-      message.includes("unauthenticated")
-    ) {
-      return true;
-    }
-  }
-
-  return false;
+  return fallback;
 }
 
+export class SupabaseErrorHandler extends GraphQLError {
+  constructor(
+    error: unknown,
+    fallbackMessage: string = "Something went wrong"
+  ) {
+    if (error instanceof PostgrestError) {
+      const message = getErrorMessage(error, fallbackMessage);
+
+      const errorMessage = String(error.message).toLowerCase();
+      if (
+        errorMessage.includes("jwt") ||
+        errorMessage.includes("unauthorized") ||
+        errorMessage.includes("unauthenticated") ||
+        error.code === "PGRST301" ||
+        error.code === "PGRST302"
+      ) {
+        super(message, "UNAUTHENTICATED", 401);
+        return;
+      }
+
+      super(message, "INTERNAL_SERVER_ERROR", 500);
+      return;
+    }
+
+    const message = getErrorMessage(error, fallbackMessage);
+
+    if (isAuthSessionMissingError(error)) {
+      super("Session is missing", "UNAUTHENTICATED", 401);
+      return;
+    }
+
+    if (error instanceof AuthInvalidJwtError) {
+      super("Invalid or expired token", "UNAUTHENTICATED", 401);
+      return;
+    }
+
+    if (error instanceof AuthInvalidCredentialsError) {
+      super("Invalid credentials", "UNAUTHENTICATED", 401);
+      return;
+    }
+
+    if (isAuthApiError(error) || isAuthError(error)) {
+      if (error.status === 401) {
+        super(message, "UNAUTHENTICATED", 401);
+        return;
+      }
+      if (error.status === 403) {
+        super(message, "FORBIDDEN", 403);
+        return;
+      }
+    }
+
+    super(message, "INTERNAL_SERVER_ERROR", 500);
+  }
+}

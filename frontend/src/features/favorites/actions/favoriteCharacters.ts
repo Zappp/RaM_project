@@ -20,10 +20,10 @@ import type { ActionResult } from "@/lib/types/actions";
 
 export async function getFavoriteCharacters(page?: number, pageSize?: number) {
   try {
-    const data = await serverGraphqlRequest<FavoriteCharactersQuery>(
-      FavoriteCharactersDocument,
-      { page, pageSize }
-    );
+    const data = await serverGraphqlRequest<FavoriteCharactersQuery>(FavoriteCharactersDocument, {
+      page,
+      pageSize,
+    });
     return data.favoriteCharacters;
   } catch (error) {
     if (error instanceof AuthError) {
@@ -31,9 +31,7 @@ export async function getFavoriteCharacters(page?: number, pageSize?: number) {
       return { error: "Authentication required" };
     }
     const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Failed to fetch favorite characters";
+      error instanceof Error ? error.message : "Failed to fetch favorite characters";
     console.error("Error fetching favorite characters:", error);
     return { error: errorMessage };
   }
@@ -43,7 +41,7 @@ export async function getFavoriteCharactersByIds(characterIds: number[]) {
   try {
     const data = await serverGraphqlRequest<FavoriteCharactersByIdsQuery>(
       FavoriteCharactersByIdsDocument,
-      { characterIds }
+      { characterIds },
     );
     return data.favoriteCharactersByIds;
   } catch (error) {
@@ -52,9 +50,7 @@ export async function getFavoriteCharactersByIds(characterIds: number[]) {
       return { error: "Authentication required" };
     }
     const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Failed to fetch favorite characters";
+      error instanceof Error ? error.message : "Failed to fetch favorite characters";
     console.error("Error fetching favorite characters by IDs:", error);
     return { error: errorMessage };
   }
@@ -62,7 +58,7 @@ export async function getFavoriteCharactersByIds(characterIds: number[]) {
 
 export async function addFavoriteCharacterAction(
   _prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionResult> {
   const characterId = parseInt(formData.get("characterId") as string, 10);
   const characterName = formData.get("characterName") as string;
@@ -73,14 +69,11 @@ export async function addFavoriteCharacterAction(
   }
 
   try {
-    await serverGraphqlRequest<AddFavoriteCharacterMutation>(
-      AddFavoriteCharacterDocument,
-      {
-        characterId,
-        characterName,
-        characterImage: characterImage || null,
-      }
-    );
+    await serverGraphqlRequest<AddFavoriteCharacterMutation>(AddFavoriteCharacterDocument, {
+      characterId,
+      characterName,
+      characterImage: characterImage || null,
+    });
     revalidatePath("/dashboard");
     revalidatePath("/favorites");
     return { success: true as const };
@@ -99,7 +92,7 @@ export async function addFavoriteCharacterAction(
 
 export async function removeFavoriteCharacterAction(
   _prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionResult> {
   const characterId = parseInt(formData.get("characterId") as string, 10);
 
@@ -108,10 +101,9 @@ export async function removeFavoriteCharacterAction(
   }
 
   try {
-    await serverGraphqlRequest<RemoveFavoriteCharacterMutation>(
-      RemoveFavoriteCharacterDocument,
-      { characterId }
-    );
+    await serverGraphqlRequest<RemoveFavoriteCharacterMutation>(RemoveFavoriteCharacterDocument, {
+      characterId,
+    });
     revalidatePath("/dashboard");
     revalidatePath("/favorites");
     return { success: true as const };

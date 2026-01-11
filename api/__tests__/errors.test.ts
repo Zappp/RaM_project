@@ -60,14 +60,38 @@ Deno.test("formatGraphQLError - formats regular Error", () => {
   const error = new Error("Regular error");
   const formatted = formatGraphQLError(error);
   assertEquals(formatted.message, "Regular error");
-  assertEquals(formatted.code, undefined);
-  assertEquals(formatted.statusCode, undefined);
+  assertEquals(formatted.code, "INTERNAL_SERVER_ERROR");
+  assertEquals(formatted.statusCode, 500);
 });
 
 Deno.test("formatGraphQLError - handles unknown errors", () => {
   const formatted = formatGraphQLError("string error");
   assertEquals(formatted.message, "An unexpected error occurred");
-  assertEquals(formatted.code, undefined);
-  assertEquals(formatted.statusCode, undefined);
+  assertEquals(formatted.code, "INTERNAL_SERVER_ERROR");
+  assertEquals(formatted.statusCode, 500);
 });
 
+Deno.test(
+  "formatGraphQLError - normalizes all error types to unified format",
+  () => {
+    const authError = formatGraphQLError(
+      new AuthenticationError("Auth failed")
+    );
+    assertEquals(authError.code, "UNAUTHENTICATED");
+    assertEquals(authError.statusCode, 401);
+
+    const validationError = formatGraphQLError(
+      new ValidationError("Invalid input")
+    );
+    assertEquals(validationError.code, "BAD_USER_INPUT");
+    assertEquals(validationError.statusCode, 400);
+
+    const notFoundError = formatGraphQLError(new NotFoundError("Not found"));
+    assertEquals(notFoundError.code, "NOT_FOUND");
+    assertEquals(notFoundError.statusCode, 404);
+
+    const regularError = formatGraphQLError(new Error("Something went wrong"));
+    assertEquals(regularError.code, "INTERNAL_SERVER_ERROR");
+    assertEquals(regularError.statusCode, 500);
+  }
+);

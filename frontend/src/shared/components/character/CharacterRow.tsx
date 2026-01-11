@@ -19,34 +19,18 @@ interface CharacterRowProps {
   canRemove: boolean;
 }
 
-export function CharacterRow({
-  item,
-  showFavoriteAction,
-  canAdd,
-  canRemove,
-}: CharacterRowProps) {
-  const characterId = isFavorite(item) 
-    ? item.characterId 
-    : parseInt(item.id, 10);
-  const name = isFavorite(item) ? item.characterName : (item.name || "");
+export function CharacterRow({ item, showFavoriteAction, canAdd, canRemove }: CharacterRowProps) {
+  const characterId = isFavorite(item) ? item.characterId : parseInt(item.id, 10);
+  const name = isFavorite(item) ? item.characterName : item.name || "";
   const image = isFavorite(item) ? item.characterImage : item.image;
   const status = isFavorite(item) ? item.characterStatus : item.status;
   const species = isFavorite(item) ? item.characterSpecies : item.species;
-  const isFavoriteValue = isFavorite(item) ? true : (item.isFavorite || false);
+  const isFavoriteValue = isFavorite(item) ? true : item.isFavorite || false;
   const itemId = item.id;
 
   return (
     <tr key={itemId}>
-      <td>
-        {image && (
-          <Image
-            src={image}
-            alt={name || "Character"}
-            width={100}
-            height={100}
-          />
-        )}
-      </td>
+      <td>{image && <Image src={image} alt={name || "Character"} width={100} height={100} />}</td>
       <td>{name}</td>
       <td>{status || "Unknown"}</td>
       <td>{species || "Unknown"}</td>
@@ -65,4 +49,3 @@ export function CharacterRow({
     </tr>
   );
 }
-

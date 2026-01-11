@@ -59,16 +59,12 @@ export function CharacterTable({
       </table>
       {pageInfo && currentPage !== undefined && basePath && (
         <div>
-          {pageInfo.prev && (
-            <Link href={`${basePath}?page=${pageInfo.prev}`}>Previous</Link>
-          )}
+          {pageInfo.prev && <Link href={`${basePath}?page=${pageInfo.prev}`}>Previous</Link>}
           <span>
             Page {currentPage} of {pageInfo.pages}
             {showTotalCount && ` (${pageInfo.count} total)`}
           </span>
-          {pageInfo.next && (
-            <Link href={`${basePath}?page=${pageInfo.next}`}>Next</Link>
-          )}
+          {pageInfo.next && <Link href={`${basePath}?page=${pageInfo.next}`}>Next</Link>}
         </div>
       )}
     </div>
