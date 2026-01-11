@@ -1,18 +1,22 @@
 import { z } from "zod";
+import { config as loadEnv } from "dotenv";
+import { resolve } from "path";
+
+loadEnv({ path: resolve(process.cwd(), "../.env") });
 
 const envSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().trim().min(1),
-  NEXT_PUBLIC_API_URL: z.url(),
-  NEXT_PUBLIC_FRONTEND_URL: z.url(),
+  SUPABASE_URL: z.url(),
+  SUPABASE_ANON_KEY: z.string().trim().min(1),
+  API_URL: z.url(),
+  FRONTEND_URL: z.url(),
 });
 
 function getEnv() {
   const rawEnv = {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_FRONTEND_URL: process.env.NEXT_PUBLIC_FRONTEND_URL,
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    API_URL: process.env.API_URL,
+    FRONTEND_URL: process.env.FRONTEND_URL,
   };
 
   const result = envSchema.safeParse(rawEnv);
@@ -23,10 +27,10 @@ function getEnv() {
   }
 
   return {
-    SUPABASE_URL: result.data.NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_ANON_KEY: result.data.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    API_URL: result.data.NEXT_PUBLIC_API_URL,
-    FRONTEND_URL: result.data.NEXT_PUBLIC_FRONTEND_URL,
+    SUPABASE_URL: result.data.SUPABASE_URL,
+    SUPABASE_ANON_KEY: result.data.SUPABASE_ANON_KEY,
+    API_URL: result.data.API_URL,
+    FRONTEND_URL: result.data.FRONTEND_URL,
   };
 }
 

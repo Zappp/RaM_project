@@ -1,7 +1,6 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
 import { env } from '../env';
 
-
 const config: CodegenConfig = {
   schema: env.API_URL,
   documents: ['src/**/*.{ts,tsx,graphql}', '!**/node_modules/**', '!**/generated.ts'],
@@ -18,4 +17,3 @@ const config: CodegenConfig = {
 };
 
 export default config;
-
