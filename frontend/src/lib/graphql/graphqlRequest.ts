@@ -41,6 +41,18 @@ export async function serverGraphqlRequest<TResult = unknown, TVariables = Recor
     }),
   });
 
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`GraphQL request failed: ${response.status} ${response.statusText}`, text);
+    if (isAuthErrorHttpStatus(response.status)) {
+      throw new AuthError("Authentication required");
+    }
+    if (isAuthorizationErrorHttpStatus(response.status)) {
+      throw new AuthorizationError("Not authorized");
+    }
+    throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`);
+  }
+
   let result;
   try {
     result = await response.json();
@@ -67,18 +79,6 @@ export async function serverGraphqlRequest<TResult = unknown, TVariables = Recor
     (customError as any).statusCode = statusCode;
 
     throw customError;
-  }
-
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(`GraphQL request failed: ${response.status} ${response.statusText}`, text);
-    if (isAuthErrorHttpStatus(response.status)) {
-      throw new AuthError("Authentication required");
-    }
-    if (isAuthorizationErrorHttpStatus(response.status)) {
-      throw new AuthorizationError("Not authorized");
-    }
-    throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`);
   }
 
   return result.data as TResult;
