@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const CharactersQuery = gql`
   query Characters($page: Int) {
@@ -43,4 +43,3 @@ export const CharacterQuery = gql`
     }
   }
 `;
-

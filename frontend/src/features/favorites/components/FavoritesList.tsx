@@ -10,11 +10,7 @@ interface FavoritesListProps {
   currentPage: number;
 }
 
-export function FavoritesList({
-  favorites,
-  pageInfo,
-  currentPage,
-}: FavoritesListProps) {
+export function FavoritesList({ favorites, pageInfo, currentPage }: FavoritesListProps) {
   if (favorites.length === 0) {
     return (
       <div>
@@ -36,4 +32,3 @@ export function FavoritesList({
     />
   );
 }
-

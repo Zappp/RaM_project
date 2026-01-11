@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export async function AuthErrorContent({
   searchParams,
@@ -6,7 +6,7 @@ export async function AuthErrorContent({
   searchParams: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
-  const error = params.error || 'An error occurred';
+  const error = params.error || "An error occurred";
 
   return (
     <div>
@@ -16,4 +16,3 @@ export async function AuthErrorContent({
     </div>
   );
 }
-

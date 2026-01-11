@@ -3,7 +3,7 @@ import {
   AuthenticationError,
   NotFoundError,
   ValidationError,
-  isAuthenticationError,
+  SupabaseErrorHandler,
 } from "@/lib/errors.ts";
 import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
 import type {
@@ -29,47 +29,50 @@ async function getFavoriteCharacters(
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = props;
   const offset = (page - 1) * pageSize;
 
-  const { data, error, count } = await supabase
-    .from("favorite_characters")
-    .select("*", { count: "exact" })
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + pageSize - 1);
+  try {
+    const { data, error, count } = await supabase
+      .from("favorite_characters")
+      .select("*", { count: "exact" })
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + pageSize - 1);
 
-  if (error) {
-    if (isAuthenticationError(error)) {
-      throw new AuthenticationError();
+    if (error) {
+      throw error;
     }
-    console.error("Error fetching favorite characters:", error);
-    throw new Error("Failed to fetch favorite characters");
+
+    const totalCount = count || 0;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    const results = (data || []).map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      characterId: row.character_id,
+      characterName: row.character_name,
+      characterImage: row.character_image || null,
+      characterStatus: row.character_status || null,
+      characterSpecies: row.character_species || null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+
+    const pageInfo = {
+      count: totalCount,
+      pages: totalPages,
+      next: page < totalPages ? page + 1 : null,
+      prev: page > 1 ? page - 1 : null,
+    };
+
+    return {
+      results,
+      info: pageInfo,
+    };
+  } catch (error) {
+    throw new SupabaseErrorHandler(
+      error,
+      "Failed to fetch favorite characters"
+    );
   }
-
-  const totalCount = count || 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
-
-  const results = (data || []).map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    characterId: row.character_id,
-    characterName: row.character_name,
-    characterImage: row.character_image || null,
-    characterStatus: row.character_status || null,
-    characterSpecies: row.character_species || null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
-
-  const pageInfo = {
-    count: totalCount,
-    pages: totalPages,
-    next: page < totalPages ? page + 1 : null,
-    prev: page > 1 ? page - 1 : null,
-  };
-
-  return {
-    results,
-    info: pageInfo,
-  };
 }
 
 async function getFavoriteCharacter(
@@ -83,36 +86,36 @@ async function getFavoriteCharacter(
 
   const { characterId } = props;
 
-  const { data, error } = await supabase
-    .from("favorite_characters")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("character_id", characterId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("favorite_characters")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("character_id", characterId)
+      .single();
 
-  if (error) {
-    if (isAuthenticationError(error)) {
-      throw new AuthenticationError();
+    if (error) {
+      throw error;
     }
-    console.error("Error fetching favorite character:", error);
-    throw new Error("Failed to fetch favorite character");
-  }
 
-  if (!data) {
-    return null;
-  }
+    if (!data) {
+      return null;
+    }
 
-  return {
-    id: data.id,
-    userId: data.user_id,
-    characterId: data.character_id,
-    characterName: data.character_name,
-    characterImage: data.character_image || null,
-    characterStatus: data.character_status || null,
-    characterSpecies: data.character_species || null,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+    return {
+      id: data.id,
+      userId: data.user_id,
+      characterId: data.character_id,
+      characterName: data.character_name,
+      characterImage: data.character_image || null,
+      characterStatus: data.character_status || null,
+      characterSpecies: data.character_species || null,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  } catch (error) {
+    throw new SupabaseErrorHandler(error, "Failed to fetch favorite character");
+  }
 }
 
 async function getFavoriteCharactersByIds(
@@ -130,31 +133,34 @@ async function getFavoriteCharactersByIds(
     return [];
   }
 
-  const { data, error } = await supabase
-    .from("favorite_characters")
-    .select("*")
-    .eq("user_id", user.id)
-    .in("character_id", characterIds);
+  try {
+    const { data, error } = await supabase
+      .from("favorite_characters")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("character_id", characterIds);
 
-  if (error) {
-    if (isAuthenticationError(error)) {
-      throw new AuthenticationError();
+    if (error) {
+      throw error;
     }
-    console.error("Error fetching favorite characters by IDs:", error);
-    throw new Error("Failed to fetch favorite characters");
-  }
 
-  return (data || []).map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    characterId: row.character_id,
-    characterName: row.character_name,
-    characterImage: row.character_image || null,
-    characterStatus: row.character_status || null,
-    characterSpecies: row.character_species || null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+    return (data || []).map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      characterId: row.character_id,
+      characterName: row.character_name,
+      characterImage: row.character_image || null,
+      characterStatus: row.character_status || null,
+      characterSpecies: row.character_species || null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch (error) {
+    throw new SupabaseErrorHandler(
+      error,
+      "Failed to fetch favorite characters"
+    );
+  }
 }
 
 async function addFavoriteCharacter(
@@ -185,42 +191,42 @@ async function addFavoriteCharacter(
     console.error("Error fetching character data:", error);
   }
 
-  const { data, error } = await supabase
-    .from("favorite_characters")
-    .insert({
-      user_id: user.id,
-      character_id: characterId,
-      character_name: characterName,
-      character_image: characterImage ?? null,
-      character_status: characterStatus,
-      character_species: characterSpecies,
-    })
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("favorite_characters")
+      .insert({
+        user_id: user.id,
+        character_id: characterId,
+        character_name: characterName,
+        character_image: characterImage ?? null,
+        character_status: characterStatus,
+        character_species: characterSpecies,
+      })
+      .select()
+      .single();
 
-  if (error) {
-    if (isAuthenticationError(error)) {
-      throw new AuthenticationError();
+    if (error) {
+      throw error;
     }
-    console.error("Error adding favorite character:", error);
-    throw new Error("Failed to add favorite character");
-  }
 
-  if (!data) {
-    throw new Error("Failed to add favorite character");
-  }
+    if (!data) {
+      throw new Error("Failed to add favorite character");
+    }
 
-  return {
-    id: data.id,
-    userId: data.user_id,
-    characterId: data.character_id,
-    characterName: data.character_name,
-    characterImage: data.character_image || null,
-    characterStatus: data.character_status || null,
-    characterSpecies: data.character_species || null,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+    return {
+      id: data.id,
+      userId: data.user_id,
+      characterId: data.character_id,
+      characterName: data.character_name,
+      characterImage: data.character_image || null,
+      characterStatus: data.character_status || null,
+      characterSpecies: data.character_species || null,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  } catch (error) {
+    throw new SupabaseErrorHandler(error, "Failed to add favorite character");
+  }
 }
 
 async function removeFavoriteCharacter(
@@ -234,21 +240,24 @@ async function removeFavoriteCharacter(
 
   const { characterId } = props;
 
-  const { error } = await supabase
-    .from("favorite_characters")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("character_id", characterId);
+  try {
+    const { error } = await supabase
+      .from("favorite_characters")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("character_id", characterId);
 
-  if (error) {
-    if (isAuthenticationError(error)) {
-      throw new AuthenticationError();
+    if (error) {
+      throw error;
     }
-    console.error("Error removing favorite character:", error);
-    throw new Error("Failed to remove favorite character");
-  }
 
-  return true;
+    return true;
+  } catch (error) {
+    throw new SupabaseErrorHandler(
+      error,
+      "Failed to remove favorite character"
+    );
+  }
 }
 
 export const favoriteCharactersResolvers = {

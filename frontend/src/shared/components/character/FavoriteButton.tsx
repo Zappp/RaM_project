@@ -25,19 +25,19 @@ export function FavoriteButton({
   canRemove = true,
 }: FavoriteButtonProps) {
   const isRequestInFlight = useRef(false);
-  
-  const [addState, addAction, isAddPending] = useActionState<
-    ActionResult,
-    FormData
-  >(addFavoriteCharacterAction, null);
-  const [removeState, removeAction, isRemovePending] = useActionState<
-    ActionResult,
-    FormData
-  >(removeFavoriteCharacterAction, null);
+
+  const [addState, addAction, isAddPending] = useActionState<ActionResult, FormData>(
+    addFavoriteCharacterAction,
+    null,
+  );
+  const [removeState, removeAction, isRemovePending] = useActionState<ActionResult, FormData>(
+    removeFavoriteCharacterAction,
+    null,
+  );
 
   const [optimisticFavorite, setOptimisticFavorite] = useOptimistic(
     initialIsFavorite,
-    (_currentState, optimisticValue: boolean) => optimisticValue
+    (_currentState, optimisticValue: boolean) => optimisticValue,
   );
 
   const isPending = isAddPending || isRemovePending || isRequestInFlight.current;
@@ -109,11 +109,7 @@ export function FavoriteButton({
         <form action={addAction} onSubmit={handleSubmit}>
           <input type="hidden" name="characterId" value={characterId} />
           <input type="hidden" name="characterName" value={characterName} />
-          <input
-            type="hidden"
-            name="characterImage"
-            value={characterImage || ""}
-          />
+          <input type="hidden" name="characterImage" value={characterImage || ""} />
           <button type="submit" disabled={isPending}>
             {isPending ? "..." : "☆ Add Favorite"}
           </button>
@@ -123,4 +119,3 @@ export function FavoriteButton({
     </div>
   );
 }
-

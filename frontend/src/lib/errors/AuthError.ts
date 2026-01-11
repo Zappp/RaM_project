@@ -6,16 +6,26 @@ export class AuthError extends Error {
   }
 }
 
-export function isAuthErrorResponse(
-  status: number,
-  errorCode?: string,
-  statusCode?: number,
-  errorMessage?: string
-): boolean {
-  return (
-    status === 401 ||
-    statusCode === 401 ||
-    errorCode === "UNAUTHENTICATED" ||
-    errorMessage === "Authentication required" // TODO merge status and statuscode
-  );
+export class AuthorizationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthorizationError";
+    Object.setPrototypeOf(this, AuthorizationError.prototype);
+  }
+}
+
+export function isAuthErrorResponse(errorCode?: string, statusCode?: number): boolean {
+  return errorCode === "UNAUTHENTICATED" || statusCode === 401;
+}
+
+export function isAuthorizationErrorResponse(errorCode?: string, statusCode?: number): boolean {
+  return errorCode === "FORBIDDEN" || statusCode === 403;
+}
+
+export function isAuthErrorHttpStatus(status: number): boolean {
+  return status === 401;
+}
+
+export function isAuthorizationErrorHttpStatus(status: number): boolean {
+  return status === 403;
 }

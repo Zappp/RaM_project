@@ -4,15 +4,19 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import { print } from "graphql";
 import { env } from "../env";
-import { createSupabaseServerClient } from "../supabase";
-import { AuthError, isAuthErrorResponse } from "../errors/AuthError";
+import {
+  AuthError,
+  AuthorizationError,
+  isAuthErrorResponse,
+  isAuthorizationErrorResponse,
+  isAuthErrorHttpStatus,
+  isAuthorizationErrorHttpStatus,
+} from "../errors/AuthError";
+import { createSupabaseServerClient } from "../supabase/supabase";
 
-export async function serverGraphqlRequest<
-  TResult = unknown,
-  TVariables = Record<string, unknown>
->(
+export async function serverGraphqlRequest<TResult = unknown, TVariables = Record<string, unknown>>(
   document: TypedDocumentNode<TResult, TVariables> | DocumentNode,
-  variables?: TVariables
+  variables?: TVariables,
 ): Promise<TResult> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -37,21 +41,12 @@ export async function serverGraphqlRequest<
     }),
   });
 
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(
-      `GraphQL request failed: ${response.status} ${response.statusText}`,
-      text
-    );
-    if (isAuthErrorResponse(response.status)) {
-      throw new AuthError("Authentication required");
-    }
-    throw new Error(
-      `GraphQL request failed: ${response.status} ${response.statusText}`
-    );
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Failed to parse response");
   }
-
-  const result = await response.json();
 
   if (result.errors && result.errors.length > 0) {
     const error = result.errors[0];
@@ -59,8 +54,12 @@ export async function serverGraphqlRequest<
     const errorCode = error.extensions?.code;
     const statusCode = error.extensions?.statusCode;
 
-    if (isAuthErrorResponse(response.status, errorCode, statusCode, errorMessage)) {
+    if (isAuthErrorResponse(errorCode, statusCode)) {
       throw new AuthError(errorMessage);
+    }
+
+    if (isAuthorizationErrorResponse(errorCode, statusCode)) {
+      throw new AuthorizationError(errorMessage);
     }
 
     const customError = new Error(errorMessage);
@@ -68,6 +67,18 @@ export async function serverGraphqlRequest<
     (customError as any).statusCode = statusCode;
 
     throw customError;
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`GraphQL request failed: ${response.status} ${response.statusText}`, text);
+    if (isAuthErrorHttpStatus(response.status)) {
+      throw new AuthError("Authentication required");
+    }
+    if (isAuthorizationErrorHttpStatus(response.status)) {
+      throw new AuthorizationError("Not authorized");
+    }
+    throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`);
   }
 
   return result.data as TResult;

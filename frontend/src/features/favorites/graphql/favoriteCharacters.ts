@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const FavoriteCharactersQuery = gql`
   query FavoriteCharacters($page: Int, $pageSize: Int) {
@@ -74,4 +74,3 @@ export const RemoveFavoriteCharacterMutation = gql`
     removeFavoriteCharacter(characterId: $characterId)
   }
 `;
-

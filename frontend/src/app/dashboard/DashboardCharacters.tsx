@@ -22,14 +22,13 @@ export async function DashboardCharacters({
   }
 
   const characterIds = charactersData.results.map((character: { id: string }) =>
-    parseInt(character.id, 10)
+    parseInt(character.id, 10),
   );
   const favoritesResult = await getFavoriteCharactersByIds(characterIds);
-  
-  const favorites =
-    favoritesResult && !("error" in favoritesResult) ? favoritesResult : [];
+
+  const favorites = favoritesResult && !("error" in favoritesResult) ? favoritesResult : [];
   const favoriteCharacterIds = new Set(
-    favorites.map((favorite: { characterId: number }) => favorite.characterId)
+    favorites.map((favorite: { characterId: number }) => favorite.characterId),
   );
 
   type Character = CharactersQuery["characters"]["results"][0];

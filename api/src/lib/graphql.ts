@@ -1,8 +1,7 @@
 import { createYoga } from "graphql-yoga";
 import type { Context } from "hono";
-import { GraphQLError } from "graphql";
 import { schema } from "../schema/index.ts";
-import { formatGraphQLError } from "./errors.ts";
+import { SupabaseErrorHandler } from "./errors.ts";
 import { validateJWT } from "./jwt.ts";
 import { createSupabaseClient } from "./supabase.ts";
 import { GraphQLContext } from "./types/graphql.ts";
@@ -15,14 +14,18 @@ export async function createGraphQLContext(
     ? authHeader.substring(7)
     : authHeader;
 
-  const supabase = createSupabaseClient(token);
+  try {
+    const supabase = createSupabaseClient(token);
 
-  let user = null;
-  if (token) {
-    user = await validateJWT(token, supabase);
+    let user = null;
+    if (token) {
+      user = await validateJWT(token, supabase);
+    }
+
+    return { context, user, supabase };
+  } catch (error) {
+    throw new SupabaseErrorHandler(error);
   }
-
-  return { context, user, supabase };
 }
 
 export function createGraphQLServer() {
@@ -51,22 +54,6 @@ export function createGraphQLServer() {
           }
         }
       }`,
-    },
-    maskedErrors: {
-      maskError(
-        error: unknown,
-        _message: string,
-        _isDev?: boolean
-      ): GraphQLError {
-        const formatted = formatGraphQLError(error);
-
-        return new GraphQLError(formatted.message, {
-          extensions: {
-            code: formatted.code,
-            statusCode: formatted.statusCode,
-          },
-        });
-      },
     },
     cors: false,
   });
