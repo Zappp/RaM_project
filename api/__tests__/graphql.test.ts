@@ -112,7 +112,7 @@ Deno.test("GraphQL server - GraphiQL playground available", async () => {
   assertEquals(response.status, 200);
   assertEquals(
     response.headers.get("Content-Type")?.includes("text/html"),
-    true
+    true,
   );
   assertEquals(text.includes("GraphiQL"), true);
 });

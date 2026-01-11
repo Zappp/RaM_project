@@ -1,11 +1,11 @@
 import { assertEquals } from "@std/assert";
 import {
-  GraphQLError,
   AuthenticationError,
   AuthorizationError,
-  ValidationError,
-  NotFoundError,
   formatGraphQLError,
+  GraphQLError,
+  NotFoundError,
+  ValidationError,
 } from "@/lib/errors.ts";
 
 Deno.test("GraphQLError - creates error with code and status", () => {
@@ -75,13 +75,13 @@ Deno.test(
   "formatGraphQLError - normalizes all error types to unified format",
   () => {
     const authError = formatGraphQLError(
-      new AuthenticationError("Auth failed")
+      new AuthenticationError("Auth failed"),
     );
     assertEquals(authError.code, "UNAUTHENTICATED");
     assertEquals(authError.statusCode, 401);
 
     const validationError = formatGraphQLError(
-      new ValidationError("Invalid input")
+      new ValidationError("Invalid input"),
     );
     assertEquals(validationError.code, "BAD_USER_INPUT");
     assertEquals(validationError.statusCode, 400);
@@ -93,5 +93,5 @@ Deno.test(
     const regularError = formatGraphQLError(new Error("Something went wrong"));
     assertEquals(regularError.code, "INTERNAL_SERVER_ERROR");
     assertEquals(regularError.statusCode, 500);
-  }
+  },
 );

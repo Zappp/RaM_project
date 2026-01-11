@@ -7,7 +7,7 @@ import { createSupabaseClient } from "./supabase.ts";
 import { GraphQLContext } from "./types/graphql.ts";
 
 export async function createGraphQLContext(
-  context: Context
+  context: Context,
 ): Promise<GraphQLContext> {
   const authHeader = context.req.header("Authorization") || null;
   const token = authHeader?.startsWith("Bearer ")

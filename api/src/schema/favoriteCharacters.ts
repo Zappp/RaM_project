@@ -34,4 +34,3 @@ export const favoriteCharactersTypeDefs = `
     removeFavoriteCharacter(characterId: Int!): Boolean!
   }
 `;
-

@@ -17,7 +17,7 @@ setInterval(cleanupCache, 60 * 1000);
 
 export async function validateJWT(
   token: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
 ): Promise<User | null> {
   const cached = cache.get(token);
   if (cached && cached.expiresAt > Date.now()) {

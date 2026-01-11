@@ -16,7 +16,7 @@ export function createSupabaseClient(token: string | null): SupabaseClient {
 export function createAdminSupabaseClient(): SupabaseClient {
   if (!env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is required for admin operations"
+      "SUPABASE_SERVICE_ROLE_KEY is required for admin operations",
     );
   }
   return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {

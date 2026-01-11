@@ -1,9 +1,9 @@
 import {
-  isAuthError,
-  isAuthApiError,
-  isAuthSessionMissingError,
-  AuthInvalidJwtError,
   AuthInvalidCredentialsError,
+  AuthInvalidJwtError,
+  isAuthApiError,
+  isAuthError,
+  isAuthSessionMissingError,
 } from "@supabase/auth-js";
 import { PostgrestError } from "@supabase/postgrest-js";
 
@@ -17,7 +17,7 @@ export class GraphQLError extends Error {
   constructor(
     message: string,
     public code: string,
-    public statusCode: number = 400
+    public statusCode: number = 400,
   ) {
     super(message);
     this.name = "GraphQLError";
@@ -69,7 +69,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
 export class SupabaseErrorHandler extends GraphQLError {
   constructor(
     error: unknown,
-    fallbackMessage: string = "Something went wrong"
+    fallbackMessage: string = "Something went wrong",
   ) {
     if (error instanceof PostgrestError) {
       const message = getErrorMessage(error, fallbackMessage);
@@ -120,4 +120,28 @@ export class SupabaseErrorHandler extends GraphQLError {
 
     super(message, "INTERNAL_SERVER_ERROR", 500);
   }
+}
+
+export function formatGraphQLError(error: unknown): NormalizedErrorResponse {
+  if (error instanceof GraphQLError) {
+    return {
+      message: error.message,
+      code: error.code,
+      statusCode: error.statusCode,
+    };
+  }
+
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      code: "INTERNAL_SERVER_ERROR",
+      statusCode: 500,
+    };
+  }
+
+  return {
+    message: "An unexpected error occurred",
+    code: "INTERNAL_SERVER_ERROR",
+    statusCode: 500,
+  };
 }
