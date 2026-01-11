@@ -2,14 +2,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "./env.ts";
 
 export function createSupabaseClient(token: string | null): SupabaseClient {
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
   return createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
     global: {
-      headers,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     },
     auth: {
       autoRefreshToken: false,
@@ -18,7 +13,7 @@ export function createSupabaseClient(token: string | null): SupabaseClient {
   });
 }
 
-export function createAdminSupabaseClient() {
+export function createAdminSupabaseClient(): SupabaseClient {
   if (!env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
       "SUPABASE_SERVICE_ROLE_KEY is required for admin operations"

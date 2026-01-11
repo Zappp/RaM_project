@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CachedUser, User } from "./types/auth.ts";
 
-const cache = new Map<string, CachedUser>();
+const cache = new Map<string, CachedUser>(); // TODO (redis, KV)
 const CACHE_TTL_MS = 60 * 1000;
 
 function cleanupCache() {

@@ -1,6 +1,6 @@
 {
   "imports": {
-    "@supabase/functions-js": "jsr:@supabase/functions-js@^0.0.0-jsr-test.1",
+    "@supabase/functions-js": "jsr:@supabase/functions-js@^2.90.0",
     "@supabase/supabase-js": "jsr:@supabase/supabase-js@^2.89.0",
     "hono": "https://deno.land/x/hono@v3.11.7/mod.ts",
     "hono/cors": "https://deno.land/x/hono@v3.11.7/middleware/cors/index.ts",
@@ -14,8 +14,7 @@
     "@graphql-tools/utils": "npm:@graphql-tools/utils@^10.11.0",
     "@std/assert": "jsr:@std/assert@0.208.0",
     "zod": "npm:zod@^4.0.0",
-    "@/": "./src/",
-    "@/lib/": "./src/lib/"
+    "@/": "./src/"
   },
   "tasks": {
     "test": "SUPABASE_URL=https://test.supabase.co SUPABASE_ANON_KEY=test-key API_URL=http://localhost:8000 FRONTEND_URL=http://localhost:3000 deno test --allow-env --allow-net --node-modules-dir --lock deno.lock __tests__/"

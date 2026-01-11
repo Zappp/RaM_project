@@ -3,9 +3,9 @@ import { z } from "zod";
 const envSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().trim().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().trim().optional(),
-  API_URL: z.url().optional(),
-  FRONTEND_URL: z.url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().trim(), // TODO may remove (along with admin supabase client)
+  API_URL: z.url(),
+  FRONTEND_URL: z.url(),
 });
 
 function getEnv() {
@@ -24,11 +24,7 @@ function getEnv() {
     throw new Error(`Invalid environment variables:\n${prettified}`);
   }
 
-  return {
-    ...result.data,
-    API_URL: result.data.API_URL ?? "http://localhost:54321/functions/v1/graphql",
-    FRONTEND_URL: result.data.FRONTEND_URL ?? "http://localhost:3000",
-  };
+  return result.data;
 }
 
 export const env = getEnv();

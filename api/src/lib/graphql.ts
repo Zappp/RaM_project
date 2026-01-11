@@ -1,11 +1,11 @@
 import { createYoga } from "graphql-yoga";
-import { GraphQLError } from "graphql";
-import { schema } from "@/schema/index.ts";
-import { formatGraphQLError } from "@/lib/errors.ts";
-import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import type { Context } from "hono";
-import { createSupabaseClient } from "@/lib/supabase.ts";
-import { validateJWT } from "@/lib/jwt.ts";
+import { GraphQLError } from "graphql";
+import { schema } from "../schema/index.ts";
+import { formatGraphQLError } from "./errors.ts";
+import { validateJWT } from "./jwt.ts";
+import { createSupabaseClient } from "./supabase.ts";
+import { GraphQLContext } from "./types/graphql.ts";
 
 export async function createGraphQLContext(
   context: Context
@@ -17,7 +17,10 @@ export async function createGraphQLContext(
 
   const supabase = createSupabaseClient(token);
 
-  const user = token ? await validateJWT(token, supabase) : null;
+  let user = null;
+  if (token) {
+    user = await validateJWT(token, supabase);
+  }
 
   return { context, user, supabase };
 }
