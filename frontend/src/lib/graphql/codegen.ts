@@ -1,10 +1,9 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
+import { env } from '../env';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:54321/functions/v1/graphql';
-const schemaUrl = `${apiUrl}`;
 
 const config: CodegenConfig = {
-  schema: schemaUrl,
+  schema: env.API_URL,
   documents: ['src/**/*.{ts,tsx,graphql}', '!**/node_modules/**', '!**/generated.ts'],
   generates: {
     'src/lib/types/generated.ts': {

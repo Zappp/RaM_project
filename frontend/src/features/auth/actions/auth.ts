@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase";
 import { signupSchema, loginSchema } from "../validations/auth";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/types/actions";
+import { env } from "@/lib/env";
 
 export async function signupAction(
   _prevState: unknown,
@@ -25,9 +26,7 @@ export async function signupAction(
       email: validationResult.data.email,
       password: validationResult.data.password,
       options: {
-        emailRedirectTo: `${
-          process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000"
-        }/auth/verify-email?next=/dashboard`,
+        emailRedirectTo: `${env.FRONTEND_URL}/auth/verify-email?next=/dashboard`, // TODO test different redirect in email smtp settings
       },
     });
 
@@ -43,7 +42,10 @@ export async function signupAction(
       redirect("/dashboard");
     }
 
-    return { success: true, message: "Please check your email to verify your account" };
+    return {
+      success: true,
+      message: "Please check your email to verify your account",
+    };
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error) {
       throw error;
@@ -99,4 +101,3 @@ export async function logoutAction() {
 
   redirect("/");
 }
-
