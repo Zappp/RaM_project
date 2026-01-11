@@ -20,7 +20,7 @@ export function createMockContext(supabase?: SupabaseClient): GraphQLContext {
 
 export function mockFetch(
   response: unknown,
-  ok: boolean = true
+  ok: boolean = true,
 ): typeof fetch {
   return () => {
     return Promise.resolve({
@@ -31,4 +31,3 @@ export function mockFetch(
     } as Response);
   };
 }
-

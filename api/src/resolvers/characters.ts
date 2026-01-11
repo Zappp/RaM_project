@@ -1,11 +1,16 @@
 import type { GraphQLContext } from "@/lib/types/graphql.ts";
-import { NotFoundError, InternalServerError } from "@/lib/errors.ts";
+import { InternalServerError, NotFoundError } from "@/lib/errors.ts";
 import { createPageInfo } from "@/lib/pagination.ts";
 import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
 import type { Character, CharacterIdProps } from "@/lib/types/character.ts";
-import type { PaginatedResult, PaginationProps } from "@/lib/types/pagination.ts";
+import type {
+  PaginatedResult,
+  PaginationProps,
+} from "@/lib/types/pagination.ts";
 
-async function fetchCharacters(props: Partial<Pick<PaginationProps, "page">>): Promise<PaginatedResult<Character>> {
+async function fetchCharacters(
+  props: Partial<Pick<PaginationProps, "page">>,
+): Promise<PaginatedResult<Character>> {
   const { page } = props;
   const url = page
     ? `${RICK_AND_MORTY_API_URL}/character?page=${page}`
@@ -15,7 +20,9 @@ async function fetchCharacters(props: Partial<Pick<PaginationProps, "page">>): P
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new InternalServerError(`Rick & Morty API error: ${response.statusText}`);
+      throw new InternalServerError(
+        `Rick & Morty API error: ${response.statusText}`,
+      );
     }
 
     const data = await response.json();
@@ -24,7 +31,7 @@ async function fetchCharacters(props: Partial<Pick<PaginationProps, "page">>): P
       data.info.count,
       data.info.pages,
       data.info.next,
-      data.info.prev
+      data.info.prev,
     );
 
     return {
@@ -49,7 +56,9 @@ async function fetchCharacter(props: CharacterIdProps): Promise<Character> {
       if (response.status === 404) {
         throw new NotFoundError("Character not found");
       }
-      throw new InternalServerError(`Rick & Morty API error: ${response.statusText}`);
+      throw new InternalServerError(
+        `Rick & Morty API error: ${response.statusText}`,
+      );
     }
 
     return await response.json();
@@ -69,7 +78,7 @@ export const charactersResolvers = {
     characters: async (
       _: unknown,
       props: Partial<Pick<PaginationProps, "page">>,
-      _context: GraphQLContext
+      _context: GraphQLContext,
     ): Promise<PaginatedResult<Character>> => {
       return await fetchCharacters(props);
     },
@@ -77,7 +86,7 @@ export const charactersResolvers = {
     character: async (
       _: unknown,
       props: CharacterIdProps,
-      _context: GraphQLContext
+      _context: GraphQLContext,
     ): Promise<Character> => {
       return await fetchCharacter(props);
     },

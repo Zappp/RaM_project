@@ -2,24 +2,24 @@ import type { GraphQLContext } from "@/lib/types/graphql.ts";
 import {
   AuthenticationError,
   NotFoundError,
-  ValidationError,
   SupabaseErrorHandler,
+  ValidationError,
 } from "@/lib/errors.ts";
 import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
 import type {
+  AddFavoriteCharacterProps,
   FavoriteCharacter,
   FavoriteCharacterIdProps,
-  AddFavoriteCharacterProps,
 } from "@/lib/types/character.ts";
 import type {
-  PaginationProps,
   PaginatedResult,
+  PaginationProps,
 } from "@/lib/types/pagination.ts";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants.ts";
 
 async function getFavoriteCharacters(
   context: GraphQLContext,
-  props: Required<PaginationProps>
+  props: Required<PaginationProps>,
 ): Promise<PaginatedResult<FavoriteCharacter>> {
   const { user, supabase } = context;
   if (!user) {
@@ -70,14 +70,14 @@ async function getFavoriteCharacters(
   } catch (error) {
     throw new SupabaseErrorHandler(
       error,
-      "Failed to fetch favorite characters"
+      "Failed to fetch favorite characters",
     );
   }
 }
 
 async function getFavoriteCharacter(
   context: GraphQLContext,
-  props: FavoriteCharacterIdProps
+  props: FavoriteCharacterIdProps,
 ): Promise<FavoriteCharacter | null> {
   const { user, supabase } = context;
   if (!user) {
@@ -120,7 +120,7 @@ async function getFavoriteCharacter(
 
 async function getFavoriteCharactersByIds(
   context: GraphQLContext,
-  props: { characterIds: number[] }
+  props: { characterIds: number[] },
 ): Promise<FavoriteCharacter[]> {
   const { user, supabase } = context;
   if (!user) {
@@ -158,14 +158,14 @@ async function getFavoriteCharactersByIds(
   } catch (error) {
     throw new SupabaseErrorHandler(
       error,
-      "Failed to fetch favorite characters"
+      "Failed to fetch favorite characters",
     );
   }
 }
 
 async function addFavoriteCharacter(
   context: GraphQLContext,
-  props: Required<AddFavoriteCharacterProps>
+  props: Required<AddFavoriteCharacterProps>,
 ): Promise<FavoriteCharacter> {
   const { user, supabase } = context;
 
@@ -180,7 +180,7 @@ async function addFavoriteCharacter(
 
   try {
     const response = await fetch(
-      `${RICK_AND_MORTY_API_URL}/character/${characterId}`
+      `${RICK_AND_MORTY_API_URL}/character/${characterId}`,
     );
     if (response.ok) {
       const characterData = await response.json();
@@ -231,7 +231,7 @@ async function addFavoriteCharacter(
 
 async function removeFavoriteCharacter(
   context: GraphQLContext,
-  props: FavoriteCharacterIdProps
+  props: FavoriteCharacterIdProps,
 ): Promise<boolean> {
   const { user, supabase } = context;
   if (!user) {
@@ -255,7 +255,7 @@ async function removeFavoriteCharacter(
   } catch (error) {
     throw new SupabaseErrorHandler(
       error,
-      "Failed to remove favorite character"
+      "Failed to remove favorite character",
     );
   }
 }
@@ -265,7 +265,7 @@ export const favoriteCharactersResolvers = {
     favoriteCharacters: async (
       _: unknown,
       props: PaginationProps,
-      context: GraphQLContext
+      context: GraphQLContext,
     ): Promise<PaginatedResult<FavoriteCharacter>> => {
       const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = props;
 
@@ -283,7 +283,7 @@ export const favoriteCharactersResolvers = {
     favoriteCharacter: async (
       _: unknown,
       props: FavoriteCharacterIdProps,
-      context: GraphQLContext
+      context: GraphQLContext,
     ): Promise<FavoriteCharacter | null> => {
       return await getFavoriteCharacter(context, props);
     },
@@ -291,7 +291,7 @@ export const favoriteCharactersResolvers = {
     favoriteCharactersByIds: async (
       _: unknown,
       props: { characterIds: number[] },
-      context: GraphQLContext
+      context: GraphQLContext,
     ): Promise<FavoriteCharacter[]> => {
       return await getFavoriteCharactersByIds(context, props);
     },
@@ -301,7 +301,7 @@ export const favoriteCharactersResolvers = {
     addFavoriteCharacter: async (
       _: unknown,
       props: AddFavoriteCharacterProps,
-      context: GraphQLContext
+      context: GraphQLContext,
     ): Promise<FavoriteCharacter> => {
       const { characterId, characterName, characterImage = null } = props;
 
@@ -319,7 +319,7 @@ export const favoriteCharactersResolvers = {
     removeFavoriteCharacter: async (
       _: unknown,
       props: FavoriteCharacterIdProps,
-      context: GraphQLContext
+      context: GraphQLContext,
     ): Promise<boolean> => {
       const { characterId } = props;
 

@@ -5,7 +5,7 @@ export function createPageInfo(
   count: number,
   pages: number,
   next: string | null,
-  prev: string | null
+  prev: string | null,
 ): PageInfo {
   return {
     count,
@@ -20,4 +20,3 @@ function extractPageNumber(url: string | null): number | null {
   const match = url.match(/page=(\d+)/);
   return match ? parseInt(match[1], 10) : null;
 }
-

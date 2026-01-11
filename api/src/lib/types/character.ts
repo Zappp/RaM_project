@@ -30,7 +30,9 @@ export interface FavoriteCharacter {
 
 export type FavoriteCharacterIdProps = Pick<FavoriteCharacter, "characterId">;
 
-export type AddFavoriteCharacterProps = Pick<
-  FavoriteCharacter,
-  "characterId" | "characterName"
-> & { characterImage?: string | null };
+export type AddFavoriteCharacterProps =
+  & Pick<
+    FavoriteCharacter,
+    "characterId" | "characterName"
+  >
+  & { characterImage?: string | null };

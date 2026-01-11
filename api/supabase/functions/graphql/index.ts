@@ -1,4 +1,4 @@
-import { Hono, type Context } from "hono";
+import { type Context, Hono } from "hono";
 import { cors } from "hono/cors";
 import { createGraphQLServer } from "../../../src/lib/graphql.ts";
 import { env } from "../../../src/lib/env.ts";
@@ -14,7 +14,7 @@ app.use(
     credentials: true,
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "Cookie"],
-  })
+  }),
 );
 
 app.all("*", async (context) => {
@@ -24,10 +24,9 @@ app.all("*", async (context) => {
   const request = new Request(url.toString(), {
     method: context.req.method,
     headers: context.req.header(),
-    body:
-      context.req.method !== "GET" && context.req.method !== "HEAD"
-        ? await context.req.raw.clone().arrayBuffer()
-        : undefined,
+    body: context.req.method !== "GET" && context.req.method !== "HEAD"
+      ? await context.req.raw.clone().arrayBuffer()
+      : undefined,
   });
 
   (request as Request & { honoContext: Context }).honoContext = context;
@@ -46,7 +45,7 @@ app.notFound((context) => {
         message: "Not found",
       },
     },
-    404
+    404,
   );
 });
 
@@ -60,7 +59,7 @@ app.onError((err, context) => {
         message: "Internal server error",
       },
     },
-    500
+    500,
   );
 });
 

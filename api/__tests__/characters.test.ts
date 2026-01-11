@@ -21,8 +21,14 @@ Deno.test("charactersResolvers.Query.characters - returns paginated characters",
         species: "Human",
         type: "",
         gender: "Male",
-        origin: { name: "Earth (C-137)", url: "https://rickandmortyapi.com/api/location/1" },
-        location: { name: "Citadel of Ricks", url: "https://rickandmortyapi.com/api/location/3" },
+        origin: {
+          name: "Earth (C-137)",
+          url: "https://rickandmortyapi.com/api/location/1",
+        },
+        location: {
+          name: "Citadel of Ricks",
+          url: "https://rickandmortyapi.com/api/location/3",
+        },
         image: "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
         episode: ["https://rickandmortyapi.com/api/episode/1"],
         created: "2017-11-04T18:48:46.250Z",
@@ -34,7 +40,11 @@ Deno.test("charactersResolvers.Query.characters - returns paginated characters",
 
   const supabase = createSupabaseClient(null);
   const context = createMockContext(supabase);
-  const result = await charactersResolvers.Query.characters(undefined, {}, context);
+  const result = await charactersResolvers.Query.characters(
+    undefined,
+    {},
+    context,
+  );
 
   assertEquals(result.results.length, 1);
   assertEquals(result.results[0].id, 1);
@@ -62,7 +72,10 @@ Deno.test("charactersResolvers.Query.characters - handles pagination with page p
         type: "Fish-Person",
         gender: "Male",
         origin: { name: "unknown", url: "" },
-        location: { name: "Citadel of Ricks", url: "https://rickandmortyapi.com/api/location/3" },
+        location: {
+          name: "Citadel of Ricks",
+          url: "https://rickandmortyapi.com/api/location/3",
+        },
         image: "https://rickandmortyapi.com/api/character/avatar/21.jpeg",
         episode: ["https://rickandmortyapi.com/api/episode/10"],
         created: "2017-11-04T22:39:48.055Z",
@@ -74,7 +87,9 @@ Deno.test("charactersResolvers.Query.characters - handles pagination with page p
 
   const supabase = createSupabaseClient(null);
   const context = createMockContext(supabase);
-  const result = await charactersResolvers.Query.characters(undefined, { page: 2 }, context);
+  const result = await charactersResolvers.Query.characters(undefined, {
+    page: 2,
+  }, context);
 
   assertEquals(result.info.next, 3);
   assertEquals(result.info.prev, 1);
@@ -95,7 +110,7 @@ Deno.test("charactersResolvers.Query.characters - handles API errors", async () 
       await charactersResolvers.Query.characters(undefined, {}, context);
     },
     Error,
-    "Rick & Morty API error: Not Found"
+    "Rick & Morty API error: Not Found",
   );
 });
 
@@ -107,8 +122,14 @@ Deno.test("charactersResolvers.Query.character - returns single character by id"
     species: "Human",
     type: "",
     gender: "Male",
-    origin: { name: "Earth (C-137)", url: "https://rickandmortyapi.com/api/location/1" },
-    location: { name: "Citadel of Ricks", url: "https://rickandmortyapi.com/api/location/3" },
+    origin: {
+      name: "Earth (C-137)",
+      url: "https://rickandmortyapi.com/api/location/1",
+    },
+    location: {
+      name: "Citadel of Ricks",
+      url: "https://rickandmortyapi.com/api/location/3",
+    },
     image: "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
     episode: ["https://rickandmortyapi.com/api/episode/1"],
     created: "2017-11-04T18:48:46.250Z",
@@ -118,7 +139,9 @@ Deno.test("charactersResolvers.Query.character - returns single character by id"
 
   const supabase = createSupabaseClient(null);
   const context = createMockContext(supabase);
-  const result = await charactersResolvers.Query.character(undefined, { id: "1" }, context);
+  const result = await charactersResolvers.Query.character(undefined, {
+    id: "1",
+  }, context);
 
   assertEquals(result.id, 1);
   assertEquals(result.name, "Rick Sanchez");
@@ -148,10 +171,14 @@ Deno.test("charactersResolvers.Query.character - throws NotFoundError for invali
 
   await assertRejects(
     async () => {
-      await charactersResolvers.Query.character(undefined, { id: "99999" }, context);
+      await charactersResolvers.Query.character(
+        undefined,
+        { id: "99999" },
+        context,
+      );
     },
     NotFoundError,
-    "Character not found"
+    "Character not found",
   );
 });
 
@@ -174,7 +201,9 @@ Deno.test("charactersResolvers.Query.character - handles null origin and locatio
 
   const supabase = createSupabaseClient(null);
   const context = createMockContext(supabase);
-  const result = await charactersResolvers.Query.character(undefined, { id: "100" }, context);
+  const result = await charactersResolvers.Query.character(undefined, {
+    id: "100",
+  }, context);
 
   assertEquals(result.origin?.name, "unknown");
   assertEquals(result.location?.name, "unknown");

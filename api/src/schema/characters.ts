@@ -35,4 +35,3 @@ export const charactersTypeDefs = `
     character(id: ID!): Character
   }
 `;
-
