@@ -89,11 +89,15 @@ export function FavoriteButton({
     (removeState && "error" in removeState ? removeState.error : undefined);
 
   if (isFavorite && !canRemove) {
-    return <span>★ Favorite</span>;
+    return (
+      <span className="text-yellow-500 text-sm" aria-label={`${characterName} is a favorite`}>
+        ★ Favorite
+      </span>
+    );
   }
 
   if (!isFavorite && !canAdd) {
-    return <span>-</span>;
+    return <span className="text-text-muted text-sm" aria-hidden="true">-</span>;
   }
 
   return (
@@ -101,8 +105,20 @@ export function FavoriteButton({
       {isFavorite ? (
         <form action={removeAction} onSubmit={handleSubmit}>
           <input type="hidden" name="characterId" value={characterId} />
-          <button type="submit" disabled={isPending}>
-            {isPending ? "..." : "★ Remove Favorite"}
+          <button
+            type="submit"
+            disabled={isPending}
+            aria-label={`Remove ${characterName} from favorites`}
+            aria-busy={isPending}
+            className="px-3 py-1 text-sm text-yellow-600 border border-yellow-300 rounded-md hover:bg-yellow-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            {isPending ? (
+              <span aria-hidden="true">...</span>
+            ) : (
+              <>
+                <span aria-hidden="true">★</span> Remove
+              </>
+            )}
           </button>
         </form>
       ) : (
@@ -110,12 +126,32 @@ export function FavoriteButton({
           <input type="hidden" name="characterId" value={characterId} />
           <input type="hidden" name="characterName" value={characterName} />
           <input type="hidden" name="characterImage" value={characterImage || ""} />
-          <button type="submit" disabled={isPending}>
-            {isPending ? "..." : "☆ Add Favorite"}
+          <button
+            type="submit"
+            disabled={isPending}
+            aria-label={`Add ${characterName} to favorites`}
+            aria-busy={isPending}
+            className="px-3 py-1 text-sm text-text border border-border rounded-md hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            {isPending ? (
+              <span aria-hidden="true">...</span>
+            ) : (
+              <>
+                <span aria-hidden="true">☆</span> Add
+              </>
+            )}
           </button>
         </form>
       )}
-      {error && <div>{error}</div>}
+      {error && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="text-red-600 text-xs mt-1"
+        >
+          {error}
+        </div>
+      )}
     </div>
   );
 }

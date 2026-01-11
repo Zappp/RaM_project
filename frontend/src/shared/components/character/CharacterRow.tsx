@@ -29,13 +29,25 @@ export function CharacterRow({ item, showFavoriteAction, canAdd, canRemove }: Ch
   const itemId = item.id;
 
   return (
-    <tr key={itemId}>
-      <td>{image && <Image src={image} alt={name || "Character"} width={100} height={100} />}</td>
-      <td>{name}</td>
-      <td>{status || "Unknown"}</td>
-      <td>{species || "Unknown"}</td>
+    <tr key={itemId} className="hover:bg-surface transition-colors">
+      <td className="px-4 py-3">
+        {image ? (
+          <Image
+            src={image}
+            alt={`${name || "Character"} profile picture`}
+            width={100}
+            height={100}
+            className="rounded-md object-cover"
+          />
+        ) : (
+          <span className="sr-only">No image available</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-text font-medium">{name || "Unknown"}</td>
+      <td className="px-4 py-3 text-text-muted">{status || "Unknown"}</td>
+      <td className="px-4 py-3 text-text-muted">{species || "Unknown"}</td>
       {showFavoriteAction && (
-        <td>
+        <td className="px-4 py-3">
           <FavoriteButton
             characterId={characterId}
             characterName={name}
