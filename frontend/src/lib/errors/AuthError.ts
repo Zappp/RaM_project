@@ -9,9 +9,13 @@ export class AuthError extends Error {
 export function isAuthErrorResponse(
   status: number,
   errorCode?: string,
-  statusCode?: number
+  statusCode?: number,
+  errorMessage?: string
 ): boolean {
   return (
-    status === 401 || statusCode === 401 || errorCode === "UNAUTHENTICATED" // TODO merge status and statuscode
+    status === 401 ||
+    statusCode === 401 ||
+    errorCode === "UNAUTHENTICATED" ||
+    errorMessage === "Authentication required" // TODO merge status and statuscode
   );
 }

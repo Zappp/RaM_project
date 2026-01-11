@@ -3,7 +3,7 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import { print } from "graphql";
-import { API_URL } from "../constants";
+import { env } from "../env";
 import { createSupabaseServerClient } from "../supabase";
 import { AuthError, isAuthErrorResponse } from "../errors/AuthError";
 
@@ -28,7 +28,7 @@ export async function serverGraphqlRequest<
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const response = await fetch(API_URL, {
+  const response = await fetch(env.API_URL, {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -59,7 +59,7 @@ export async function serverGraphqlRequest<
     const errorCode = error.extensions?.code;
     const statusCode = error.extensions?.statusCode;
 
-    if (isAuthErrorResponse(response.status, errorCode, statusCode)) {
+    if (isAuthErrorResponse(response.status, errorCode, statusCode, errorMessage)) {
       throw new AuthError(errorMessage);
     }
 
