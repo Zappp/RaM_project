@@ -7,7 +7,10 @@ import { z } from "zod";
 import type { ActionResult } from "@/lib/types/actions";
 import { env } from "@/lib/env";
 
-export async function signupAction(_prevState: unknown, formData: FormData): Promise<ActionResult> {
+export async function signupAction(
+  _prevState: unknown,
+  formData: FormData
+): Promise<ActionResult> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -23,7 +26,7 @@ export async function signupAction(_prevState: unknown, formData: FormData): Pro
       email: validationResult.data.email,
       password: validationResult.data.password,
       options: {
-        emailRedirectTo: `${env.FRONTEND_URL}/auth/verify-email?next=/dashboard`, // TODO test different redirect in email smtp settings
+        emailRedirectTo: `${env.FRONTEND_URL}/auth/verify-email?next=/dashboard`,
       },
     });
 
@@ -51,7 +54,10 @@ export async function signupAction(_prevState: unknown, formData: FormData): Pro
   }
 }
 
-export async function loginAction(_prevState: unknown, formData: FormData): Promise<ActionResult> {
+export async function loginAction(
+  _prevState: unknown,
+  formData: FormData
+): Promise<ActionResult> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
