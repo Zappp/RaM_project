@@ -3,7 +3,7 @@ import { z } from "zod";
 const envSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().trim().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().trim(), // TODO may remove (along with admin supabase client)
+  SUPABASE_SERVICE_ROLE_KEY: z.string().trim(),
   API_URL: z.url(),
   FRONTEND_URL: z.url(),
 });

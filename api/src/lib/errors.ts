@@ -121,27 +121,3 @@ export class SupabaseErrorHandler extends GraphQLError {
     super(message, "INTERNAL_SERVER_ERROR", 500);
   }
 }
-
-export function formatGraphQLError(error: unknown): NormalizedErrorResponse {
-  if (error instanceof GraphQLError) {
-    return {
-      message: error.message,
-      code: error.code,
-      statusCode: error.statusCode,
-    };
-  }
-
-  if (error instanceof Error) {
-    return {
-      message: error.message,
-      code: "INTERNAL_SERVER_ERROR",
-      statusCode: 500,
-    };
-  }
-
-  return {
-    message: "An unexpected error occurred",
-    code: "INTERNAL_SERVER_ERROR",
-    statusCode: 500,
-  };
-}
