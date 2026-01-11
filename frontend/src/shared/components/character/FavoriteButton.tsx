@@ -97,7 +97,11 @@ export function FavoriteButton({
   }
 
   if (!isFavorite && !canAdd) {
-    return <span className="text-text-muted text-sm" aria-hidden="true">-</span>;
+    return (
+      <span className="text-text-muted text-sm" aria-hidden="true">
+        -
+      </span>
+    );
   }
 
   return (
@@ -144,11 +148,7 @@ export function FavoriteButton({
         </form>
       )}
       {error && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="text-red-600 text-xs mt-1"
-        >
+        <div role="alert" aria-live="polite" className="text-red-600 text-xs mt-1">
           {error}
         </div>
       )}

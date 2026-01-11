@@ -36,12 +36,7 @@ export function LoginForm() {
       </div>
 
       {state && "error" in state && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="text-red-600 text-sm"
-          id="login-error"
-        >
+        <div role="alert" aria-live="polite" className="text-red-600 text-sm" id="login-error">
           {state.error}
         </div>
       )}

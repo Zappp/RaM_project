@@ -17,7 +17,7 @@ export default function FavoritesPage({
         }
       >
         <FavoritesContent searchParams={searchParams} />
-        </Suspense>
+      </Suspense>
     </main>
   );
 }

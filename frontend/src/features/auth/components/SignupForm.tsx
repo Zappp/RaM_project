@@ -36,12 +36,7 @@ export function SignupForm() {
       </div>
 
       {state && "error" in state && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="text-red-600 text-sm"
-          id="signup-error"
-        >
+        <div role="alert" aria-live="polite" className="text-red-600 text-sm" id="signup-error">
           {state.error}
         </div>
       )}
