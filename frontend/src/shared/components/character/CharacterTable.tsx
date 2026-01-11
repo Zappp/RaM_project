@@ -63,18 +63,18 @@ export function CharacterTable({
                 )}
               </tr>
             </thead>
-          <tbody className="divide-y divide-border">
-            {items.map((item) => (
-              <CharacterRow
-                key={item.id}
-                item={item}
-                showFavoriteAction={showFavoriteAction}
-                canAdd={canAdd}
-                canRemove={canRemove}
-              />
-            ))}
-          </tbody>
-        </table>
+            <tbody className="divide-y divide-border">
+              {items.map((item) => (
+                <CharacterRow
+                  key={item.id}
+                  item={item}
+                  showFavoriteAction={showFavoriteAction}
+                  canAdd={canAdd}
+                  canRemove={canRemove}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
       {pageInfo && currentPage !== undefined && basePath && (
