@@ -58,7 +58,6 @@ Deno.test("InternalServerError - creates 500 error", () => {
 });
 
 Deno.test("SupabaseErrorHandler - handles error with jwt in message", () => {
-  // Test that errors with "jwt" in the message are handled correctly
   const error = new SupabaseErrorHandler(new Error("JWT expired"));
   assertEquals(error.code, "INTERNAL_SERVER_ERROR");
   assertEquals(error.statusCode, 500);

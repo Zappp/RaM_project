@@ -4,8 +4,11 @@
   "private": true,
   "description": "Rick & Morty app with React, Supabase, and GraphQL",
   "scripts": {
-    "api": "cd api && deno task cache && deno task dev",
-    "frontend": "cd frontend && pnpm install && pnpm dev"
+    "setup:frontend": "cd frontend && pnpm install",
+    "setup:api": "cd api && deno task cache",
+    "frontend": "cd frontend && pnpm dev",
+    "api": "cd api && deno task dev",
+    "codegen": "cd frontend && pnpm codegen"
   },
   "engines": {
     "node": ">=18.0.0"
