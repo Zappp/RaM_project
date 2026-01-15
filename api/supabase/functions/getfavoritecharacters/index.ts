@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   try {
     const { supabase, accessToken } = createSupabaseClient(req);
 
-    const { data: claimsData, error: claimsError } =
-      await supabase.auth.getClaims(accessToken);
+    const { data: claimsData, error: claimsError } = await supabase.auth
+      .getClaims(accessToken);
 
     if (claimsError || !claimsData?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     return new Response(
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 });

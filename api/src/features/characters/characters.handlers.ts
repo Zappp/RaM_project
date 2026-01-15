@@ -1,17 +1,16 @@
-import type { YogaContext } from "@/lib/graphql.ts";
 import { InternalServerError } from "@/lib/errors.ts";
 import { createPageInfo } from "@/lib/pagination.ts";
 import { env } from "@/lib/env.ts";
-import type { Character } from "@/lib/types/character.ts";
-import type {
-  PaginatedResult,
-  PaginationProps,
-} from "@/lib/types/pagination.ts";
+import type { Character } from "./characters.types.ts";
+import type { PaginatedResult } from "@/lib/types/pagination.ts";
+import type { YogaContext } from "@/lib/graphql.ts";
+import type { ValidatedCharactersPagination } from "./characters.types.ts";
 
-async function fetchCharacters(
-  props: Partial<Pick<PaginationProps, "page">>,
+export async function fetchCharactersHandler(
+  transformedArgs: ValidatedCharactersPagination,
+  _context: YogaContext,
 ): Promise<PaginatedResult<Character>> {
-  const { page } = props;
+  const { page } = transformedArgs;
   const url = new URL(`${env.SUPABASE_URL}/functions/v1/getcharacters`);
   if (page) {
     url.searchParams.set("page", page.toString());
@@ -30,7 +29,7 @@ async function fetchCharacters(
         .json()
         .catch(() => ({ error: "Unknown error" }));
       throw new InternalServerError(
-        error.error || `Rick & Morty API error: ${response.statusText}`
+        error.error || `Rick & Morty API error: ${response.statusText}`,
       );
     }
 
@@ -54,15 +53,3 @@ async function fetchCharacters(
     throw new InternalServerError("Failed to fetch characters");
   }
 }
-
-export const charactersResolvers = {
-  Query: {
-    characters: async (
-      _: unknown,
-      props: Partial<Pick<PaginationProps, "page">>,
-      _yogaContext: YogaContext,
-    ): Promise<PaginatedResult<Character>> => {
-      return await fetchCharacters(props);
-    },
-  },
-};

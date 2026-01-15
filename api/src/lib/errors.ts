@@ -177,3 +177,5 @@ export class SupabaseErrorHandler extends GraphQLError {
     this.name = "SupabaseErrorHandler";
   }
 }
+
+// TODO update error message returned to client (rn shows backend related data (line location etc))

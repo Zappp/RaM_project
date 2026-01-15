@@ -18,8 +18,8 @@ export function createSupabaseClient(req: Request): {
     global: {
       headers: accessToken
         ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
+          Authorization: `Bearer ${accessToken}`,
+        }
         : {},
     },
     auth: {

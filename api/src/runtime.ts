@@ -1,4 +1,4 @@
-import { createHonoServer } from "./lib/honoServer.ts";
+import { createHonoServer } from "./lib/server.ts";
 
 const app = createHonoServer();
 

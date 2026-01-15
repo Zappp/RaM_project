@@ -1,4 +1,4 @@
-export const charactersTypeDefs = `
+export const charactersGraphQLSchema = `
   type Character {
     id: ID!
     name: String!

@@ -20,13 +20,13 @@
     "@/": "./src/"
   },
   "tasks": {
-    "cache": "deno cache --node-modules-dir --lock deno.lock --reload src/server.ts",
-    "check": "deno check --node-modules-dir --lock deno.lock src/server.ts",
+    "cache": "deno cache --node-modules-dir --lock deno.lock --reload src/runtime.ts",
+    "check": "deno check --node-modules-dir --lock deno.lock src/runtime.ts",
     "fmt": "deno fmt",
     "fmt:check": "deno fmt --check",
     "lint": "deno lint",
-    "test": "SUPABASE_URL=https://test.supabase.co SUPABASE_ANON_KEY=test-key SUPABASE_SERVICE_ROLE_KEY=test-service-key API_URL=http://localhost:54321/functions/v1/graphql FRONTEND_URL=http://localhost:3000 deno test --allow-env --allow-net --node-modules-dir --lock deno.lock __tests__/",
+    "test": "SUPABASE_URL=https://test.supabase.co SUPABASE_ANON_KEY=test-key SUPABASE_SERVICE_ROLE_KEY=test-service-key API_URL=http://localhost:54321/functions/v1/graphql FRONTEND_URL=http://localhost:3000 deno test --allow-env --allow-net --node-modules-dir --lock deno.lock src/features/**/*.test.ts",
     "dev": "npx supabase functions serve graphql --env-file ../.env",
-    "server": "deno run --watch --allow-env --allow-read --allow-net --env-file=../.env --node-modules-dir --lock deno.lock src/server.ts"
+    "run": "deno run --watch --allow-env --allow-read --allow-net --env-file=../.env --node-modules-dir --lock deno.lock src/runtime.ts"
   }
 }

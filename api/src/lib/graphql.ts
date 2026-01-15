@@ -1,7 +1,6 @@
 import { createYoga } from "graphql-yoga";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { typeDefs } from "../schema/index.ts";
-import { resolvers } from "../resolvers/index.ts";
+import { resolvers, typeDefs } from "../features/index.ts";
 import { AppEnv } from "./types/hono.ts";
 
 export type YogaContext = AppEnv["Variables"];
