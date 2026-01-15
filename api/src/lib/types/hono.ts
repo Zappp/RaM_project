@@ -1,9 +1,12 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { User } from "./auth.ts";
+
+export interface ContextUser {
+  accessToken: string;
+}
 
 interface AppVariables {
   supabase: SupabaseClient;
-  user: User | null;
+  user: ContextUser | null;
   [key: string]: unknown;
 }
 

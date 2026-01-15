@@ -1,4 +1,4 @@
-export const authTypeDefs = `
+export const authGraphQLSchema = `
   type User {
     id: ID!
     email: String
@@ -13,14 +13,9 @@ export const authTypeDefs = `
     message: String
   }
 
-  type Query {
-    health: String!
-  }
-
   type Mutation {
     login(email: String!, password: String!): LoginResponse!
     signup(email: String!, password: String!): SignupResponse!
     logout: Boolean!
   }
 `;
-

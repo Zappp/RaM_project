@@ -1,4 +1,4 @@
-export const favoriteCharactersTypeDefs = `
+export const favoriteCharactersGraphQLSchema = `
   type FavoriteCharacter {
     id: ID!
     userId: ID!

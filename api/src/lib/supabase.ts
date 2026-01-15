@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { env } from "./env.ts";
 import { AppEnv } from "./types/hono.ts";
-import { REFRESH_THRESHOLD_SECONDS } from "./constants.ts";
+import { ACCESS_TOKEN_REFRESH_THRESHOLD_SECONDS } from "./constants.ts";
 
 export const supabaseMiddleware = (): MiddlewareHandler<AppEnv> => {
   return async (context, next) => {
@@ -23,7 +23,7 @@ export const supabaseMiddleware = (): MiddlewareHandler<AppEnv> => {
           },
         },
         auth: { throwOnError: false },
-      }
+      },
     );
 
     let updatedUser = user;
@@ -31,7 +31,7 @@ export const supabaseMiddleware = (): MiddlewareHandler<AppEnv> => {
       const now = Math.floor(Date.now() / 1000);
       const timeUntilExpiry = tokenExpiresAt - now;
 
-      if (timeUntilExpiry < REFRESH_THRESHOLD_SECONDS) {
+      if (timeUntilExpiry < ACCESS_TOKEN_REFRESH_THRESHOLD_SECONDS) {
         const {
           data: { session },
         } = await supabase.auth.getSession();

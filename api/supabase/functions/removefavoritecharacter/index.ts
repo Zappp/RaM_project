@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   try {
     const { supabase, accessToken } = createSupabaseClient(req);
 
-    const { data: claimsData, error: claimsError } =
-      await supabase.auth.getClaims(accessToken);
+    const { data: claimsData, error: claimsError } = await supabase.auth
+      .getClaims(accessToken);
 
     if (claimsError || !claimsData?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -24,10 +24,13 @@ Deno.serve(async (req) => {
     const { characterId } = await req.json();
 
     if (!characterId) {
-      return new Response(JSON.stringify({ error: "Character ID is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Character ID is required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const { data: existing } = await supabase
@@ -43,7 +46,7 @@ Deno.serve(async (req) => {
         {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -71,7 +74,7 @@ Deno.serve(async (req) => {
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 });

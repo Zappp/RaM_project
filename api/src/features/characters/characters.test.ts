@@ -1,6 +1,7 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { charactersResolvers } from "@/resolvers/characters.ts";
-import { createMockYogaContext, mockFetch } from "./utils.ts";
+import type { GraphQLResolveInfo } from "graphql";
+import { charactersResolvers } from "./characters.resolvers.ts";
+import { createMockYogaContext, mockFetch } from "../../lib/tests.ts";
 
 Deno.test("charactersResolvers.Query.characters - returns paginated characters", async () => {
   const mockResponse = {
@@ -40,6 +41,7 @@ Deno.test("charactersResolvers.Query.characters - returns paginated characters",
     undefined,
     {},
     yogaContext,
+    {} as GraphQLResolveInfo,
   );
 
   assertEquals(result.results.length, 1);
@@ -82,9 +84,14 @@ Deno.test("charactersResolvers.Query.characters - handles pagination with page p
   globalThis.fetch = mockFetch(mockResponse);
 
   const yogaContext = createMockYogaContext();
-  const result = await charactersResolvers.Query.characters(undefined, {
-    page: 2,
-  }, yogaContext);
+  const result = await charactersResolvers.Query.characters(
+    undefined,
+    {
+      page: 2,
+    },
+    yogaContext,
+    {} as GraphQLResolveInfo,
+  );
 
   assertEquals(result.info.next, 3);
   assertEquals(result.info.prev, 1);
@@ -101,7 +108,12 @@ Deno.test("charactersResolvers.Query.characters - handles API errors", async () 
 
   await assertRejects(
     async () => {
-      await charactersResolvers.Query.characters(undefined, {}, yogaContext);
+      await charactersResolvers.Query.characters(
+        undefined,
+        {},
+        yogaContext,
+        {} as GraphQLResolveInfo,
+      );
     },
     Error,
     "Rick & Morty API error: Not Found",

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { GraphQLError } from "graphql";
-import { NotFoundError, InternalServerError } from "./errors.ts";
+import { InternalServerError, NotFoundError } from "./errors.ts";
 import { env } from "./env.ts";
 import { mergeSetCookieHeadersFromHonoToYogaResponse } from "./cookies.ts";
 import { createGraphQLServer } from "./graphql.ts";
@@ -20,7 +20,7 @@ export function createHonoServer() {
       allowMethods: ["GET", "POST", "OPTIONS"],
       allowHeaders: ["Content-Type", "Cookie"],
     }),
-    supabaseMiddleware()
+    supabaseMiddleware(),
   );
 
   // TODO check if can split into two separate handlers
@@ -30,10 +30,9 @@ export function createHonoServer() {
     const request = new Request(url.toString(), {
       method: context.req.method,
       headers: context.req.header(),
-      body:
-        context.req.method !== "GET" && context.req.method !== "HEAD"
-          ? await context.req.raw.clone().arrayBuffer()
-          : undefined,
+      body: context.req.method !== "GET" && context.req.method !== "HEAD"
+        ? await context.req.raw.clone().arrayBuffer()
+        : undefined,
     });
     (request as Request & { yogaContext: AppEnv["Variables"] }).yogaContext =
       context.var;
@@ -57,7 +56,7 @@ export function createHonoServer() {
           },
         ],
       },
-      404
+      404,
     );
   });
 
@@ -67,7 +66,7 @@ export function createHonoServer() {
       error = err;
     } else {
       error = new InternalServerError(
-        err instanceof Error ? err.message : "Internal server error"
+        err instanceof Error ? err.message : "Internal server error",
       );
     }
 
@@ -83,7 +82,7 @@ export function createHonoServer() {
           },
         ],
       },
-      (error.extensions?.statusCode as number) || 500
+      (error.extensions?.statusCode as number) || 500,
     );
   });
 

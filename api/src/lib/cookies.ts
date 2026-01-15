@@ -2,14 +2,14 @@ import { parseCookieHeader } from "@supabase/ssr";
 import { decodeBase64Url } from "@std/encoding/base64url";
 import type { Context } from "hono";
 import type { CookieToSet } from "./types/cookie.ts";
-import { jwtVerify, createRemoteJWKSet } from "jose";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { env } from "./env.ts";
-import { User } from "./types/auth.ts";
+import type { ContextUser } from "./types/hono.ts";
 import type { TokenVerificationResult } from "./types/cookie.ts";
 
 export async function parseCookies(context: Context): Promise<{
   allCookies: Array<CookieToSet>;
-  user: User | null;
+  user: ContextUser | null;
   tokenExpiresAt: number | null;
 }> {
   const cookieHeader = context.req.header("Cookie") ?? "";
@@ -36,8 +36,8 @@ export async function parseCookies(context: Context): Promise<{
   const isProduction = Deno.env.get("NODE_ENV") === "production";
 
   for (const cookie of parsed) {
-    const isAccessTokenInvalid =
-      cookie.name.includes("auth-token") && !verifiedAccessToken;
+    const isAccessTokenInvalid = cookie.name.includes("auth-token") &&
+      !verifiedAccessToken;
 
     if (isAccessTokenInvalid) {
       allCookies.push({
@@ -67,7 +67,7 @@ export async function parseCookies(context: Context): Promise<{
 }
 
 function extractAccessTokenFromAuthCookieValue(
-  cookieValue: string
+  cookieValue: string,
 ): string | null {
   const trimmed = cookieValue.trim();
   if (!trimmed.startsWith("base64-")) {
@@ -88,11 +88,11 @@ function extractAccessTokenFromAuthCookieValue(
 }
 
 export async function verifyAccessToken(
-  token: string
+  token: string,
 ): Promise<TokenVerificationResult | null> {
   try {
     const jwks = createRemoteJWKSet(
-      new URL(`${env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`)
+      new URL(`${env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`),
     );
 
     const { payload } = await jwtVerify(token, jwks, {
@@ -112,7 +112,7 @@ export async function verifyAccessToken(
 
 export function setCookiesInContext(
   context: Context,
-  cookiesToSet: Array<CookieToSet>
+  cookiesToSet: Array<CookieToSet>,
 ): void {
   cookiesToSet.forEach(({ name, value, options }) => {
     const cookieParts: string[] = [`${name}=${encodeURIComponent(value)}`];
@@ -128,11 +128,10 @@ export function setCookiesInContext(
         cookieParts.push(`Domain=${options.domain}`);
       }
       if (options.sameSite) {
-        const sameSiteValue =
-          typeof options.sameSite === "string"
-            ? options.sameSite.charAt(0).toUpperCase() +
-              options.sameSite.slice(1).toLowerCase()
-            : "Lax";
+        const sameSiteValue = typeof options.sameSite === "string"
+          ? options.sameSite.charAt(0).toUpperCase() +
+            options.sameSite.slice(1).toLowerCase()
+          : "Lax";
         cookieParts.push(`SameSite=${sameSiteValue}`);
       }
       if (options.secure) {
@@ -153,7 +152,7 @@ export function setCookiesInContext(
 
 export function mergeSetCookieHeadersFromHonoToYogaResponse(
   context: Context,
-  yogaResponse: Response
+  yogaResponse: Response,
 ): Response {
   const setCookieHeaders = context.res.headers.getSetCookie();
 
