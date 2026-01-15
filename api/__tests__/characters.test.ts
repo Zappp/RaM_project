@@ -1,9 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { charactersResolvers } from "@/resolvers/characters.ts";
-import { NotFoundError } from "@/lib/errors.ts";
-import type { Character } from "@/lib/types/character.ts";
-import { createMockContext, mockFetch } from "./utils.ts";
-import { createSupabaseClient } from "@/lib/supabase.ts";
+import { createMockYogaContext, mockFetch } from "./utils.ts";
 
 Deno.test("charactersResolvers.Query.characters - returns paginated characters", async () => {
   const mockResponse = {
@@ -38,12 +35,11 @@ Deno.test("charactersResolvers.Query.characters - returns paginated characters",
 
   globalThis.fetch = mockFetch(mockResponse);
 
-  const supabase = createSupabaseClient(null);
-  const context = createMockContext(supabase);
+  const yogaContext = createMockYogaContext();
   const result = await charactersResolvers.Query.characters(
     undefined,
     {},
-    context,
+    yogaContext,
   );
 
   assertEquals(result.results.length, 1);
@@ -85,11 +81,10 @@ Deno.test("charactersResolvers.Query.characters - handles pagination with page p
 
   globalThis.fetch = mockFetch(mockResponse);
 
-  const supabase = createSupabaseClient(null);
-  const context = createMockContext(supabase);
+  const yogaContext = createMockYogaContext();
   const result = await charactersResolvers.Query.characters(undefined, {
     page: 2,
-  }, context);
+  }, yogaContext);
 
   assertEquals(result.info.next, 3);
   assertEquals(result.info.prev, 1);
@@ -102,109 +97,13 @@ Deno.test("charactersResolvers.Query.characters - handles API errors", async () 
   };
   globalThis.fetch = mockFetch(emptyResponse, false);
 
-  const supabase = createSupabaseClient(null);
-  const context = createMockContext(supabase);
+  const yogaContext = createMockYogaContext();
 
   await assertRejects(
     async () => {
-      await charactersResolvers.Query.characters(undefined, {}, context);
+      await charactersResolvers.Query.characters(undefined, {}, yogaContext);
     },
     Error,
     "Rick & Morty API error: Not Found",
   );
-});
-
-Deno.test("charactersResolvers.Query.character - returns single character by id", async () => {
-  const mockCharacter: Character = {
-    id: 1,
-    name: "Rick Sanchez",
-    status: "Alive",
-    species: "Human",
-    type: "",
-    gender: "Male",
-    origin: {
-      name: "Earth (C-137)",
-      url: "https://rickandmortyapi.com/api/location/1",
-    },
-    location: {
-      name: "Citadel of Ricks",
-      url: "https://rickandmortyapi.com/api/location/3",
-    },
-    image: "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
-    episode: ["https://rickandmortyapi.com/api/episode/1"],
-    created: "2017-11-04T18:48:46.250Z",
-  };
-
-  globalThis.fetch = mockFetch(mockCharacter);
-
-  const supabase = createSupabaseClient(null);
-  const context = createMockContext(supabase);
-  const result = await charactersResolvers.Query.character(undefined, {
-    id: "1",
-  }, context);
-
-  assertEquals(result.id, 1);
-  assertEquals(result.name, "Rick Sanchez");
-  assertEquals(result.status, "Alive");
-  assertEquals(result.species, "Human");
-  assertEquals(result.origin?.name, "Earth (C-137)");
-});
-
-Deno.test("charactersResolvers.Query.character - throws NotFoundError for invalid id", async () => {
-  const emptyCharacter: Character = {
-    id: 0,
-    name: "",
-    status: "",
-    species: "",
-    type: "",
-    gender: "",
-    origin: { name: "", url: "" },
-    location: { name: "", url: "" },
-    image: "",
-    episode: [],
-    created: "",
-  };
-  globalThis.fetch = mockFetch(emptyCharacter, false);
-
-  const supabase = createSupabaseClient(null);
-  const context = createMockContext(supabase);
-
-  await assertRejects(
-    async () => {
-      await charactersResolvers.Query.character(
-        undefined,
-        { id: "99999" },
-        context,
-      );
-    },
-    NotFoundError,
-    "Character not found",
-  );
-});
-
-Deno.test("charactersResolvers.Query.character - handles null origin and location", async () => {
-  const mockCharacter: Character = {
-    id: 100,
-    name: "Test Character",
-    status: "Alive",
-    species: "Alien",
-    type: "",
-    gender: "unknown",
-    origin: { name: "unknown", url: "" },
-    location: { name: "unknown", url: "" },
-    image: "https://rickandmortyapi.com/api/character/avatar/100.jpeg",
-    episode: [],
-    created: "2017-11-04T18:48:46.250Z",
-  };
-
-  globalThis.fetch = mockFetch(mockCharacter);
-
-  const supabase = createSupabaseClient(null);
-  const context = createMockContext(supabase);
-  const result = await charactersResolvers.Query.character(undefined, {
-    id: "100",
-  }, context);
-
-  assertEquals(result.origin?.name, "unknown");
-  assertEquals(result.location?.name, "unknown");
 });

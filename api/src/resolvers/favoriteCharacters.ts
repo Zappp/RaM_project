@@ -1,11 +1,9 @@
-import type { GraphQLContext } from "@/lib/types/graphql.ts";
+import type { YogaContext } from "@/lib/graphql.ts";
 import {
   AuthenticationError,
   NotFoundError,
-  SupabaseErrorHandler,
   ValidationError,
 } from "@/lib/errors.ts";
-import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
 import type {
   AddFavoriteCharacterProps,
   FavoriteCharacter,
@@ -16,113 +14,52 @@ import type {
   PaginationProps,
 } from "@/lib/types/pagination.ts";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants.ts";
+import { env } from "@/lib/env.ts";
+
+// TODO add clear separation between input data validation (utilize zod) and handler
+// TODO add decorators for authentication/validation (?)
+// TODO keep in mind that some edge functions do not need authentication for some resources
+// TODO add a fetch wrapper (?)
 
 async function getFavoriteCharacters(
-  context: GraphQLContext,
-  props: Required<PaginationProps>,
+  yogaContext: YogaContext,
+  props: Required<PaginationProps>
 ): Promise<PaginatedResult<FavoriteCharacter>> {
-  const { user, supabase } = context;
+  const { user } = yogaContext;
   if (!user) {
     throw new AuthenticationError();
   }
 
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = props;
-  const offset = (page - 1) * pageSize;
 
-  try {
-    const { data, error, count } = await supabase
-      .from("favorite_characters")
-      .select("*", { count: "exact" })
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .range(offset, offset + pageSize - 1);
+  const url = new URL(`${env.SUPABASE_URL}/functions/v1/getfavoritecharacters`);
+  url.searchParams.set("page", page.toString());
+  url.searchParams.set("pageSize", pageSize.toString());
 
-    if (error) {
-      throw error;
-    }
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${user.accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
 
-    const totalCount = count || 0;
-    const totalPages = Math.ceil(totalCount / pageSize);
-
-    const results = (data || []).map((row) => ({
-      id: row.id,
-      userId: row.user_id,
-      characterId: row.character_id,
-      characterName: row.character_name,
-      characterImage: row.character_image || null,
-      characterStatus: row.character_status || null,
-      characterSpecies: row.character_species || null,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
-
-    const pageInfo = {
-      count: totalCount,
-      pages: totalPages,
-      next: page < totalPages ? page + 1 : null,
-      prev: page > 1 ? page - 1 : null,
-    };
-
-    return {
-      results,
-      info: pageInfo,
-    };
-  } catch (error) {
-    throw new SupabaseErrorHandler(
-      error,
-      "Failed to fetch favorite characters",
-    );
-  }
-}
-
-async function getFavoriteCharacter(
-  context: GraphQLContext,
-  props: FavoriteCharacterIdProps,
-): Promise<FavoriteCharacter | null> {
-  const { user, supabase } = context;
-  if (!user) {
-    throw new AuthenticationError();
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.error || "Failed to fetch favorite characters");
   }
 
-  const { characterId } = props;
-
-  try {
-    const { data, error } = await supabase
-      .from("favorite_characters")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("character_id", characterId)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    return {
-      id: data.id,
-      userId: data.user_id,
-      characterId: data.character_id,
-      characterName: data.character_name,
-      characterImage: data.character_image || null,
-      characterStatus: data.character_status || null,
-      characterSpecies: data.character_species || null,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-  } catch (error) {
-    throw new SupabaseErrorHandler(error, "Failed to fetch favorite character");
-  }
+  const data = await response.json();
+  return data;
 }
 
 async function getFavoriteCharactersByIds(
-  context: GraphQLContext,
-  props: { characterIds: number[] },
+  yogaContext: YogaContext,
+  props: { characterIds: number[] }
 ): Promise<FavoriteCharacter[]> {
-  const { user, supabase } = context;
+  const { user } = yogaContext;
   if (!user) {
     throw new AuthenticationError();
   }
@@ -133,41 +70,36 @@ async function getFavoriteCharactersByIds(
     return [];
   }
 
-  try {
-    const { data, error } = await supabase
-      .from("favorite_characters")
-      .select("*")
-      .eq("user_id", user.id)
-      .in("character_id", characterIds);
-
-    if (error) {
-      throw error;
+  // TODO can be invoked using supabase client (?)
+  // TODO check function naming format (is lowercase a must?)
+  const response = await fetch(
+    `${env.SUPABASE_URL}/functions/v1/getfavoritecharactersbyids`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${user.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ characterIds }),
     }
+  );
 
-    return (data || []).map((row) => ({
-      id: row.id,
-      userId: row.user_id,
-      characterId: row.character_id,
-      characterName: row.character_name,
-      characterImage: row.character_image || null,
-      characterStatus: row.character_status || null,
-      characterSpecies: row.character_species || null,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
-  } catch (error) {
-    throw new SupabaseErrorHandler(
-      error,
-      "Failed to fetch favorite characters",
-    );
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.error || "Failed to fetch favorite characters");
   }
+
+  const data = await response.json();
+  return data.results || [];
 }
 
 async function addFavoriteCharacter(
-  context: GraphQLContext,
-  props: Required<AddFavoriteCharacterProps>,
+  yogaContext: YogaContext,
+  props: Required<AddFavoriteCharacterProps>
 ): Promise<FavoriteCharacter> {
-  const { user, supabase } = context;
+  const { user } = yogaContext;
 
   if (!user) {
     throw new AuthenticationError();
@@ -175,89 +107,67 @@ async function addFavoriteCharacter(
 
   const { characterId, characterName, characterImage = null } = props;
 
-  let characterStatus: string | null = null;
-  let characterSpecies: string | null = null;
-
-  try {
-    const response = await fetch(
-      `${RICK_AND_MORTY_API_URL}/character/${characterId}`,
-    );
-    if (response.ok) {
-      const characterData = await response.json();
-      characterStatus = characterData.status || null;
-      characterSpecies = characterData.species || null;
+  const response = await fetch(
+    `${env.SUPABASE_URL}/functions/v1/addfavoritecharacter`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${user.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        characterId,
+        characterName,
+        characterImage,
+      }),
     }
-  } catch (error) {
-    console.error("Error fetching character data:", error);
+  );
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.error || "Failed to add favorite character");
   }
 
-  try {
-    const { data, error } = await supabase
-      .from("favorite_characters")
-      .insert({
-        user_id: user.id,
-        character_id: characterId,
-        character_name: characterName,
-        character_image: characterImage ?? null,
-        character_status: characterStatus,
-        character_species: characterSpecies,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data) {
-      throw new Error("Failed to add favorite character");
-    }
-
-    return {
-      id: data.id,
-      userId: data.user_id,
-      characterId: data.character_id,
-      characterName: data.character_name,
-      characterImage: data.character_image || null,
-      characterStatus: data.character_status || null,
-      characterSpecies: data.character_species || null,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-  } catch (error) {
-    throw new SupabaseErrorHandler(error, "Failed to add favorite character");
-  }
+  const data = await response.json();
+  return data;
 }
 
 async function removeFavoriteCharacter(
-  context: GraphQLContext,
-  props: FavoriteCharacterIdProps,
+  yogaContext: YogaContext,
+  props: FavoriteCharacterIdProps
 ): Promise<boolean> {
-  const { user, supabase } = context;
+  const { user } = yogaContext;
   if (!user) {
     throw new AuthenticationError();
   }
 
   const { characterId } = props;
 
-  try {
-    const { error } = await supabase
-      .from("favorite_characters")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("character_id", characterId);
-
-    if (error) {
-      throw error;
+  const response = await fetch(
+    `${env.SUPABASE_URL}/functions/v1/removefavoritecharacter`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${user.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ characterId }),
     }
+  );
 
-    return true;
-  } catch (error) {
-    throw new SupabaseErrorHandler(
-      error,
-      "Failed to remove favorite character",
-    );
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Unknown error" }));
+    if (response.status === 404) {
+      throw new NotFoundError(error.error || "Favorite character not found");
+    }
+    throw new Error(error.error || "Failed to remove favorite character");
   }
+
+  return true;
 }
 
 export const favoriteCharactersResolvers = {
@@ -265,7 +175,7 @@ export const favoriteCharactersResolvers = {
     favoriteCharacters: async (
       _: unknown,
       props: PaginationProps,
-      context: GraphQLContext,
+      yogaContext: YogaContext
     ): Promise<PaginatedResult<FavoriteCharacter>> => {
       const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = props;
 
@@ -277,23 +187,15 @@ export const favoriteCharactersResolvers = {
         throw new ValidationError("Page size must be between 1 and 100");
       }
 
-      return await getFavoriteCharacters(context, { page, pageSize });
-    },
-
-    favoriteCharacter: async (
-      _: unknown,
-      props: FavoriteCharacterIdProps,
-      context: GraphQLContext,
-    ): Promise<FavoriteCharacter | null> => {
-      return await getFavoriteCharacter(context, props);
+      return await getFavoriteCharacters(yogaContext, { page, pageSize });
     },
 
     favoriteCharactersByIds: async (
       _: unknown,
       props: { characterIds: number[] },
-      context: GraphQLContext,
+      yogaContext: YogaContext
     ): Promise<FavoriteCharacter[]> => {
-      return await getFavoriteCharactersByIds(context, props);
+      return await getFavoriteCharactersByIds(yogaContext, props);
     },
   },
 
@@ -301,7 +203,7 @@ export const favoriteCharactersResolvers = {
     addFavoriteCharacter: async (
       _: unknown,
       props: AddFavoriteCharacterProps,
-      context: GraphQLContext,
+      yogaContext: YogaContext
     ): Promise<FavoriteCharacter> => {
       const { characterId, characterName, characterImage = null } = props;
 
@@ -309,7 +211,7 @@ export const favoriteCharactersResolvers = {
         throw new ValidationError("Character ID and name are required");
       }
 
-      return await addFavoriteCharacter(context, {
+      return await addFavoriteCharacter(yogaContext, {
         characterId,
         characterName,
         characterImage,
@@ -319,7 +221,7 @@ export const favoriteCharactersResolvers = {
     removeFavoriteCharacter: async (
       _: unknown,
       props: FavoriteCharacterIdProps,
-      context: GraphQLContext,
+      yogaContext: YogaContext
     ): Promise<boolean> => {
       const { characterId } = props;
 
@@ -327,12 +229,7 @@ export const favoriteCharactersResolvers = {
         throw new ValidationError("Character ID is required");
       }
 
-      const favoriteCharacter = await getFavoriteCharacter(context, props);
-      if (!favoriteCharacter) {
-        throw new NotFoundError("Favorite character not found");
-      }
-
-      return await removeFavoriteCharacter(context, props);
+      return await removeFavoriteCharacter(yogaContext, props);
     },
   },
 };

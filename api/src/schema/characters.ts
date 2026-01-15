@@ -32,6 +32,5 @@ export const charactersTypeDefs = `
 
   type Query {
     characters(page: Int): CharactersResponse!
-    character(id: ID!): Character
   }
 `;

@@ -25,7 +25,6 @@ export const favoriteCharactersTypeDefs = `
 
   extend type Query {
     favoriteCharacters(page: Int, pageSize: Int): FavoriteCharactersResponse!
-    favoriteCharacter(characterId: Int!): FavoriteCharacter
     favoriteCharactersByIds(characterIds: [Int!]!): [FavoriteCharacter!]!
   }
 
