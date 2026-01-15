@@ -364,8 +364,20 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# Edge function configuration
-[functions.graphql]
+#Edge function configuration
+[functions.getfavoritecharacters]
+verify_jwt = false
+
+[functions.getfavoritecharactersbyids]
+verify_jwt = false
+
+[functions.addfavoritecharacter]
+verify_jwt = false
+
+[functions.removefavoritecharacter]
+verify_jwt = false
+
+[functions.getcharacters]
 verify_jwt = false
 
 # Edge function secrets/environment variables

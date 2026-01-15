@@ -1,28 +1,49 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { MiddlewareHandler } from "hono";
+import { parseCookies, setCookiesInContext } from "./cookies.ts";
+import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { env } from "./env.ts";
+import { AppEnv } from "./types/hono.ts";
+import { REFRESH_THRESHOLD_SECONDS } from "./constants.ts";
 
-export function createSupabaseClient(token: string | null): SupabaseClient {
-  return createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-    global: {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    },
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+export const supabaseMiddleware = (): MiddlewareHandler<AppEnv> => {
+  return async (context, next) => {
+    const { allCookies, user, tokenExpiresAt } = await parseCookies(context);
 
-export function createAdminSupabaseClient(): SupabaseClient {
-  if (!env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is required for admin operations",
+    const supabase = createServerClient(
+      env.SUPABASE_URL,
+      env.SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return allCookies;
+          },
+          setAll(cookiesToSet) {
+            setCookiesInContext(context, cookiesToSet);
+          },
+        },
+        auth: { throwOnError: false },
+      }
     );
-  }
-  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+
+    let updatedUser = user;
+    if (user && tokenExpiresAt) {
+      const now = Math.floor(Date.now() / 1000);
+      const timeUntilExpiry = tokenExpiresAt - now;
+
+      if (timeUntilExpiry < REFRESH_THRESHOLD_SECONDS) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          updatedUser = { accessToken: session.access_token };
+        }
+      }
+    }
+
+    context.set("supabase", supabase as unknown as SupabaseClient);
+    context.set("user", updatedUser);
+
+    await next();
+  };
+};

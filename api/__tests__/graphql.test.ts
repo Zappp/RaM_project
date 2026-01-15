@@ -1,49 +1,11 @@
 import { assertEquals } from "@std/assert";
-import { createGraphQLServer } from "@/lib/graphql.ts";
-import { Context } from "hono";
+import { createGraphQLServer, type YogaContext } from "@/lib/graphql.ts";
 import { env } from "@/lib/env.ts";
-
-function createMockContext(cookieHeader?: string): Context {
-  const headers = new Headers();
-  if (cookieHeader) {
-    headers.set("Cookie", cookieHeader);
-  }
-
-  const responseHeaders = new Headers();
-
-  const req = {
-    header: (name: string) => headers.get(name) || undefined,
-    url: `${env.API_URL}/graphql`,
-    method: "POST",
-    raw: {
-      clone: () => ({
-        arrayBuffer: async () => await Promise.resolve(new ArrayBuffer(0)),
-      }),
-    },
-  };
-
-  const context = {
-    req,
-    header: (name: string, value?: string) => {
-      if (value !== undefined) {
-        if (name === "Set-Cookie") {
-          responseHeaders.append(name, value);
-        } else {
-          responseHeaders.set(name, value);
-        }
-        return;
-      }
-      return responseHeaders.get(name) || undefined;
-    },
-    _responseHeaders: responseHeaders,
-  } as unknown as Context & { _responseHeaders: Headers };
-
-  return context;
-}
+import { createMockYogaContext } from "./utils.ts";
 
 Deno.test("GraphQL server - handles query", async () => {
   const yoga = createGraphQLServer();
-  const mockContext = createMockContext();
+  const yogaContext = createMockYogaContext();
 
   const request = new Request(`${env.API_URL}/graphql`, {
     method: "POST",
@@ -57,7 +19,8 @@ Deno.test("GraphQL server - handles query", async () => {
     }),
   });
 
-  (request as Request & { honoContext: Context }).honoContext = mockContext;
+  (request as Request & { yogaContext: YogaContext }).yogaContext =
+    yogaContext;
 
   const response = await yoga.fetch(request);
   const result = await response.json();
@@ -68,7 +31,7 @@ Deno.test("GraphQL server - handles query", async () => {
 
 Deno.test("GraphQL server - favoriteCharacters query requires authentication", async () => {
   const yoga = createGraphQLServer();
-  const mockContext = createMockContext();
+  const yogaContext = createMockYogaContext();
 
   const request = new Request(`${env.API_URL}/graphql`, {
     method: "POST",
@@ -87,7 +50,8 @@ Deno.test("GraphQL server - favoriteCharacters query requires authentication", a
     }),
   });
 
-  (request as Request & { honoContext: Context }).honoContext = mockContext;
+  (request as Request & { yogaContext: YogaContext }).yogaContext =
+    yogaContext;
 
   const response = await yoga.fetch(request);
   const result = await response.json();

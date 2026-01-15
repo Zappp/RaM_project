@@ -1,8 +1,8 @@
-import type { GraphQLContext } from "@/lib/types/graphql.ts";
-import { InternalServerError, NotFoundError } from "@/lib/errors.ts";
+import type { YogaContext } from "@/lib/graphql.ts";
+import { InternalServerError } from "@/lib/errors.ts";
 import { createPageInfo } from "@/lib/pagination.ts";
-import { RICK_AND_MORTY_API_URL } from "@/lib/constants.ts";
-import type { Character, CharacterIdProps } from "@/lib/types/character.ts";
+import { env } from "@/lib/env.ts";
+import type { Character } from "@/lib/types/character.ts";
 import type {
   PaginatedResult,
   PaginationProps,
@@ -12,16 +12,25 @@ async function fetchCharacters(
   props: Partial<Pick<PaginationProps, "page">>,
 ): Promise<PaginatedResult<Character>> {
   const { page } = props;
-  const url = page
-    ? `${RICK_AND_MORTY_API_URL}/character?page=${page}`
-    : `${RICK_AND_MORTY_API_URL}/character`;
+  const url = new URL(`${env.SUPABASE_URL}/functions/v1/getcharacters`);
+  if (page) {
+    url.searchParams.set("page", page.toString());
+  }
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ error: "Unknown error" }));
       throw new InternalServerError(
-        `Rick & Morty API error: ${response.statusText}`,
+        error.error || `Rick & Morty API error: ${response.statusText}`
       );
     }
 
@@ -46,49 +55,14 @@ async function fetchCharacters(
   }
 }
 
-async function fetchCharacter(props: CharacterIdProps): Promise<Character> {
-  const { id } = props;
-
-  try {
-    const response = await fetch(`${RICK_AND_MORTY_API_URL}/character/${id}`);
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new NotFoundError("Character not found");
-      }
-      throw new InternalServerError(
-        `Rick & Morty API error: ${response.statusText}`,
-      );
-    }
-
-    return await response.json();
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      throw error;
-    }
-    if (error instanceof InternalServerError) {
-      throw error;
-    }
-    throw new InternalServerError("Failed to fetch character");
-  }
-}
-
 export const charactersResolvers = {
   Query: {
     characters: async (
       _: unknown,
       props: Partial<Pick<PaginationProps, "page">>,
-      _context: GraphQLContext,
+      _yogaContext: YogaContext,
     ): Promise<PaginatedResult<Character>> => {
       return await fetchCharacters(props);
-    },
-
-    character: async (
-      _: unknown,
-      props: CharacterIdProps,
-      _context: GraphQLContext,
-    ): Promise<Character> => {
-      return await fetchCharacter(props);
     },
   },
 };

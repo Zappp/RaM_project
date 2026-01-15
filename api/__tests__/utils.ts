@@ -1,20 +1,19 @@
-import type { GraphQLContext } from "@/lib/types/graphql.ts";
-import type { Context } from "hono";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { createSupabaseClient } from "@/lib/supabase.ts";
+import type { YogaContext } from "@/lib/graphql.ts";
 
-export function createMockContext(supabase?: SupabaseClient): GraphQLContext {
-  const mockHonoContext = {
-    req: {
-      header: () => undefined,
+export function createMockYogaContext(): YogaContext {
+  const mockSupabase = {
+    auth: {
+      signInWithPassword: () => Promise.resolve({ data: null, error: null }),
+      signUp: () => Promise.resolve({ data: null, error: null }),
+      signOut: () => Promise.resolve({ error: null }),
+      getClaims: () => Promise.resolve({ data: null, error: null }),
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
     },
-    header: () => undefined,
-  } as unknown as Context;
+  } as unknown as YogaContext["supabase"];
 
   return {
-    context: mockHonoContext,
     user: null,
-    supabase: supabase ?? createSupabaseClient(null),
+    supabase: mockSupabase,
   };
 }
 

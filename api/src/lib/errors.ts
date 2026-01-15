@@ -1,4 +1,5 @@
 import {
+  AuthError,
   AuthInvalidCredentialsError,
   AuthInvalidJwtError,
   isAuthApiError,
@@ -6,55 +7,64 @@ import {
   isAuthSessionMissingError,
 } from "@supabase/auth-js";
 import { PostgrestError } from "@supabase/postgrest-js";
-
-export type NormalizedErrorResponse = {
-  message: string;
-  code: string;
-  statusCode: number;
-};
-
-export class GraphQLError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public statusCode: number = 400,
-  ) {
-    super(message);
-    this.name = "GraphQLError";
-  }
-}
+import { GraphQLError } from "graphql";
 
 export class AuthenticationError extends GraphQLError {
   constructor(message: string = "Authentication required") {
-    super(message, "UNAUTHENTICATED", 401);
+    super(message, {
+      extensions: {
+        code: "UNAUTHENTICATED",
+        statusCode: 401,
+      },
+    });
     this.name = "AuthenticationError";
   }
 }
 
 export class AuthorizationError extends GraphQLError {
   constructor(message: string = "Not authorized") {
-    super(message, "FORBIDDEN", 403);
+    super(message, {
+      extensions: {
+        code: "FORBIDDEN",
+        statusCode: 403,
+      },
+    });
     this.name = "AuthorizationError";
   }
 }
 
 export class ValidationError extends GraphQLError {
   constructor(message: string) {
-    super(message, "BAD_USER_INPUT", 400);
+    super(message, {
+      extensions: {
+        code: "BAD_USER_INPUT",
+        statusCode: 400,
+      },
+    });
     this.name = "ValidationError";
   }
 }
 
 export class NotFoundError extends GraphQLError {
   constructor(message: string = "Resource not found") {
-    super(message, "NOT_FOUND", 404);
+    super(message, {
+      extensions: {
+        code: "NOT_FOUND",
+        statusCode: 404,
+      },
+    });
     this.name = "NotFoundError";
   }
 }
 
 export class InternalServerError extends GraphQLError {
   constructor(message: string = "Internal server error") {
-    super(message, "INTERNAL_SERVER_ERROR", 500);
+    super(message, {
+      extensions: {
+        code: "INTERNAL_SERVER_ERROR",
+        statusCode: 500,
+      },
+    });
     this.name = "InternalServerError";
   }
 }
@@ -66,58 +76,104 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export class SupabaseErrorHandler extends GraphQLError {
-  constructor(
-    error: unknown,
-    fallbackMessage: string = "Something went wrong",
-  ) {
-    if (error instanceof PostgrestError) {
-      const message = getErrorMessage(error, fallbackMessage);
+export class PostgrestErrorHandler extends GraphQLError {
+  constructor(error: PostgrestError) {
+    const message = getErrorMessage(error, "Database query failed");
 
-      const errorMessage = String(error.message).toLowerCase();
-      if (
-        errorMessage.includes("jwt") ||
-        errorMessage.includes("unauthorized") ||
-        errorMessage.includes("unauthenticated") ||
-        error.code === "PGRST301" ||
-        error.code === "PGRST302"
-      ) {
-        super(message, "UNAUTHENTICATED", 401);
-        return;
-      }
-
-      super(message, "INTERNAL_SERVER_ERROR", 500);
+    const errorMessage = String(error.message).toLowerCase();
+    if (
+      errorMessage.includes("jwt") ||
+      errorMessage.includes("unauthorized") ||
+      errorMessage.includes("unauthenticated") ||
+      error.code === "PGRST301" ||
+      error.code === "PGRST302"
+    ) {
+      super(message, {
+        extensions: {
+          code: "UNAUTHENTICATED",
+          statusCode: 401,
+        },
+      });
+      this.name = "PostgrestErrorHandler";
       return;
     }
 
-    const message = getErrorMessage(error, fallbackMessage);
+    super(message, {
+      extensions: {
+        code: "INTERNAL_SERVER_ERROR",
+        statusCode: 500,
+      },
+    });
+    this.name = "PostgrestErrorHandler";
+  }
+}
+
+export class SupabaseErrorHandler extends GraphQLError {
+  constructor(error: AuthError) {
+    const message = error.message || "Something went wrong";
 
     if (isAuthSessionMissingError(error)) {
-      super("Session is missing", "UNAUTHENTICATED", 401);
+      super("Session is missing", {
+        extensions: {
+          code: "UNAUTHENTICATED",
+          statusCode: 401,
+        },
+      });
+      this.name = "SupabaseErrorHandler";
       return;
     }
 
     if (error instanceof AuthInvalidJwtError) {
-      super("Invalid or expired token", "UNAUTHENTICATED", 401);
+      super("Invalid or expired token", {
+        extensions: {
+          code: "UNAUTHENTICATED",
+          statusCode: 401,
+        },
+      });
+      this.name = "SupabaseErrorHandler";
       return;
     }
 
     if (error instanceof AuthInvalidCredentialsError) {
-      super("Invalid credentials", "UNAUTHENTICATED", 401);
+      super("Invalid credentials", {
+        extensions: {
+          code: "UNAUTHENTICATED",
+          statusCode: 401,
+        },
+      });
+      this.name = "SupabaseErrorHandler";
       return;
     }
 
     if (isAuthApiError(error) || isAuthError(error)) {
       if (error.status === 401) {
-        super(message, "UNAUTHENTICATED", 401);
+        super(message, {
+          extensions: {
+            code: "UNAUTHENTICATED",
+            statusCode: 401,
+          },
+        });
+        this.name = "SupabaseErrorHandler";
         return;
       }
       if (error.status === 403) {
-        super(message, "FORBIDDEN", 403);
+        super(message, {
+          extensions: {
+            code: "FORBIDDEN",
+            statusCode: 403,
+          },
+        });
+        this.name = "SupabaseErrorHandler";
         return;
       }
     }
 
-    super(message, "INTERNAL_SERVER_ERROR", 500);
+    super(message, {
+      extensions: {
+        code: "INTERNAL_SERVER_ERROR",
+        statusCode: 500,
+      },
+    });
+    this.name = "SupabaseErrorHandler";
   }
 }
