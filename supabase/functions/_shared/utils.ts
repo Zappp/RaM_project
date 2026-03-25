@@ -1,8 +1,9 @@
 import { prettifyError, z } from "@zod";
 import { CamelizeKeys, Milliseconds, SnakeifyKeys } from "./types/utils.ts";
-import { AuthError, PostgrestError } from "@supabase";
+import { PostgrestError } from "@supabase";
 import { PG_ERROR_MAP } from "./constants.ts";
 import { Context } from "@hono/hono";
+import { HTTPException } from "@hono/hono/http-exception";
 
 export const stringToInt = z.codec(
   z.string().regex(z.regexes.integer),
@@ -68,17 +69,14 @@ function mapPostgresError(code: string) {
   );
 }
 
-export function handleRouteError(error: unknown, context: Context) {
+export function handleRouteError(error: unknown) {
   if (error instanceof PostgrestError) {
-    const pgError = mapPostgresError(error.code);
-    return context.json({ error: pgError.message }, pgError.status);
+    const { status, message } = mapPostgresError(error.code);
+    throw new HTTPException(status, { message: message });
   }
 
-  return context.json({
-    status: 500,
-    body: {
-      error: error instanceof Error ? error.message : "Internal server error",
-    },
+  throw new HTTPException(500, {
+    message: error instanceof Error ? error.message : "Internal server error",
   });
 }
 

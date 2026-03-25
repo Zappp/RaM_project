@@ -35,7 +35,7 @@ app.get(
 
       return context.json(camelizeKeys(data));
     } catch (error) {
-      return handleRouteError(error, context);
+      return handleRouteError(error);
     }
   },
 );
@@ -74,7 +74,7 @@ app.get(
         },
       });
     } catch (error) {
-      return handleRouteError(error, context);
+      return handleRouteError(error);
     }
   },
 );
@@ -105,7 +105,7 @@ app.post(
 
       return context.json(camelizeKeys(data));
     } catch (error) {
-      return handleRouteError(error, context);
+      return handleRouteError(error);
     }
   },
 );
@@ -133,7 +133,7 @@ app.delete(
 
       return context.json(camelizeKeys(data));
     } catch (error) {
-      return handleRouteError(error, context);
+      return handleRouteError(error);
     }
   },
 );

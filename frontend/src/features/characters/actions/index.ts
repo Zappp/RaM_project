@@ -22,6 +22,7 @@ export async function getCharactersAction(
 
     const endpoint = params.toString() ? `characters?${params.toString()}` : "characters";
 
+
     const { data, error } = await supabase.functions.invoke<PaginatedResult<Character>>(endpoint, {
       method: "GET",
     });
