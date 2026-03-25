@@ -1,0 +1,17 @@
+.cursor
+.vscode
+
+node_modules/
+.pnp
+.pnp.js
+
+.next/
+dist/
+build/
+out/
+
+*.tsbuildinfo
+
+pnpm-lock.yaml
+
+AGENTS.md

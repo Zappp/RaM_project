@@ -1,19 +1,19 @@
+import { SigninForm } from "@/features/auth/components/SigninForm";
 import { SignupForm } from "@/features/auth/components/SignupForm";
-import { LoginForm } from "@/features/auth/components/LoginForm";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <main id="main-content" className="w-full max-w-md space-y-8">
-        <h1 className="text-4xl font-bold text-center text-text">RaM App</h1>
-        <div className="space-y-6">
-          <div className="bg-background rounded-lg border border-border p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold mb-4 text-text">Signup</h2>
+    <div className="flex min-h-screen items-start justify-center p-4">
+      <main id="main-content" className="w-full max-w-3xl space-y-8">
+        <h1 className="text-center font-bold text-4xl text-text">Rick and Morty App</h1>
+        <div className="flex flex-wrap items-start gap-6">
+          <div className="w-full min-w-75 flex-1 rounded-lg border border-border bg-background p-6 shadow-sm sm:max-w-none sm:flex-1">
+            <h2 className="mb-4 text-center font-semibold text-2xl text-text">Sign up</h2>
             <SignupForm />
           </div>
-          <div className="bg-background rounded-lg border border-border p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold mb-4 text-text">Login</h2>
-            <LoginForm />
+          <div className="w-full min-w-75 flex-1 rounded-lg border border-border bg-background p-6 shadow-sm sm:max-w-none sm:flex-1">
+            <h2 className="mb-4 text-center font-semibold text-2xl text-text">Sign in</h2>
+            <SigninForm />
           </div>
         </div>
       </main>

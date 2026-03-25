@@ -20,6 +20,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "sourceMap": true,
     "plugins": [
       {
         "name": "next"
