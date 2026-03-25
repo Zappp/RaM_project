@@ -36,7 +36,7 @@ app.get(
         info: pageInfo,
       });
     } catch (error) {
-      return handleRouteError(error, context);
+      return handleRouteError(error);
     }
   },
 );

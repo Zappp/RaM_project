@@ -2,6 +2,7 @@ import { HonoRequest, MiddlewareHandler } from "@hono/hono";
 import { AppEnv } from "./types/env.ts";
 import * as jose from "@jose";
 import { env } from "./hono.ts";
+import { HTTPException } from "@hono/hono/http-exception";
 
 const SUPABASE_JWT_KEYS = jose.createRemoteJWKSet(
   new URL(env.SUPABASE_URL + "/auth/v1/.well-known/jwks.json"),
@@ -37,12 +38,11 @@ export const WithAuth = (): MiddlewareHandler<AppEnv<"authenticated">> => {
         return await next();
       }
 
-      return context.json({ error: "Invalid JWT" }, 401);
+      throw new Error("Invalid JWT");
     } catch (error) {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Unauthorized";
-      return context.json({ error: errorMessage }, 401);
+      throw new HTTPException(401, {
+        message: error instanceof Error ? error.message : "Unauthorized",
+      });
     }
   };
 };

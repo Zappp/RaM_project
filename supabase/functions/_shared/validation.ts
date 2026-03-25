@@ -1,6 +1,7 @@
 import { flattenError, ZodType } from "@zod";
 import { zValidator } from "@hono/zod-validator";
 import { ValidationTargets } from "@hono/hono";
+import { HTTPException } from "@hono/hono/http-exception";
 
 export const WithValidation = <
   Target extends keyof ValidationTargets,
@@ -11,6 +12,7 @@ export const WithValidation = <
 ) =>
   zValidator(target, schema, (result, context) => {
     if (!result.success) {
-      return context.json({ error: flattenError(result.error) }, 400);
+      const res = context.json({ error: flattenError(result.error) }, 400);
+      throw new HTTPException(400, { res });
     }
   });
