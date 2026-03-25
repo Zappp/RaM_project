@@ -1,14 +1,29 @@
 import { Suspense } from "react";
-import { AuthErrorContent } from "./AuthErrorContent";
 
-export default function AuthErrorPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
+async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: string }> }) {
+  const params = await searchParams;
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AuthErrorContent searchParams={searchParams} />
-    </Suspense>
+    <>
+      {params?.error ? (
+        <p className="text-muted-foreground text-sm">Code error: {params.error}</p>
+      ) : (
+        <p className="text-muted-foreground text-sm">An unspecified error occurred.</p>
+      )}
+    </>
+  );
+}
+
+export default async function Page({ searchParams }: { searchParams: Promise<{ error: string }> }) {
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col gap-6">
+          <Suspense>
+            <ErrorContent searchParams={searchParams} />
+          </Suspense>
+        </div>
+      </div>
+    </div>
   );
 }

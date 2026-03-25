@@ -1,33 +1,77 @@
-import { CharacterTable } from "@/shared/components/character/CharacterTable";
-import type { CharactersQuery } from "@/lib/types/generated";
+import { Suspense } from "react";
+import { getCharactersAction } from "@/features/characters/actions";
+import { getFavoriteCharactersByRemoteIdAction } from "@/features/favoriteCharacters/actions";
+import {
+  CharacterRow,
+  CharactersTable,
+  type CharactersTableProps,
+} from "@/shared/components/charactersTable/CharactersTable";
+import { ActionButtonSkeleton } from "@/shared/components/charactersTable/CharactersTableSkeleton";
+import { CharactersOptimisticList } from "./CharactersOptimisticList";
 
-type Character = CharactersQuery["characters"]["results"][0] & { isFavorite?: boolean };
-type PageInfo = CharactersQuery["characters"]["info"];
+export async function CharactersList({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const page = params.page;
 
-interface CharactersListProps {
-  characters: Character[];
-  pageInfo: PageInfo;
-  currentPage: number;
-  canAdd?: boolean;
-  canRemove?: boolean;
+  const { data: charactersData, success: charactersSuccess } = await getCharactersAction(page);
+  if (!charactersSuccess) {
+    return <CharactersTable items={[]} emptyState="Failed to fetch characters" />;
+  }
+  const { results: characters, info } = charactersData;
+
+  return (
+    <Suspense
+      fallback={
+        <CharactersTable items={characters}>
+          {characters.map((character) => (
+            <CharacterRow key={character.remoteId} item={character}>
+              <ActionButtonSkeleton />
+            </CharacterRow>
+          ))}
+        </CharactersTable>
+      }
+    >
+      <CharactersWithFavoriteList
+        items={characters}
+        currentPage={page}
+        pageInfo={info}
+        basePath="/dashboard"
+      />
+    </Suspense>
+  );
 }
 
-export function CharactersList({
-  characters,
-  pageInfo,
+async function CharactersWithFavoriteList({
+  items: characters,
   currentPage,
-  canAdd = true,
-  canRemove = true,
-}: CharactersListProps) {
+  pageInfo,
+  basePath,
+}: CharactersTableProps) {
+  const characterRemoteIds = characters.map(({ remoteId }) => remoteId);
+
+  const { data: favoritesData, success: favoritesSuccess } =
+    await getFavoriteCharactersByRemoteIdAction(characterRemoteIds);
+  if (!favoritesSuccess) {
+    return <CharactersTable items={[]} emptyState="Failed to fetch characters" />;
+  }
+
+  const favoriteCharacterRemoteIds = new Set(favoritesData.map(({ remoteId }) => remoteId));
+  const charactersWithFavorites =
+    characters.map((character) => ({
+      ...character,
+      isFavorite: favoriteCharacterRemoteIds.has(character.remoteId),
+    })) ?? [];
+
   return (
-    <CharacterTable
-      items={characters}
-      showFavoriteAction={true}
-      canAdd={canAdd}
-      canRemove={canRemove}
-      pageInfo={pageInfo}
+    <CharactersOptimisticList
+      items={charactersWithFavorites}
       currentPage={currentPage}
-      basePath="/dashboard"
+      pageInfo={pageInfo}
+      basePath={basePath}
     />
   );
 }
