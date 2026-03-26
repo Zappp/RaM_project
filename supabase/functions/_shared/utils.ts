@@ -69,6 +69,7 @@ function mapPostgresError(code: string) {
 }
 
 export function handleRouteError(error: unknown) {
+  console.error(error);
   if (error instanceof PostgrestError) {
     const { status, message } = mapPostgresError(error.code);
     throw new HTTPException(status, { message: message });
