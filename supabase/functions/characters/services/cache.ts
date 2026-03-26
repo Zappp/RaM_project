@@ -7,7 +7,7 @@ import { RemoteApiClientService } from "./remoteApiClient.ts";
 export class CacheService {
   private totalCount: number | null = null;
 
-  private readonly TOTAL_COUNT_EXPIRY_MS = ms(6, "h");
+  private readonly TOTAL_COUNT_EXPIRY_MS = ms(7, "d");
   private readonly CHARACTERS_EXPIRY_MS = ms(1, "d");
 
   constructor(
