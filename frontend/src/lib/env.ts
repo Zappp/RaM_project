@@ -9,8 +9,8 @@ const envSchema = z.object({
 
 function getEnv() {
   const rawEnv = {
-    SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
   };
 
   const result = envSchema.safeParse(rawEnv);
