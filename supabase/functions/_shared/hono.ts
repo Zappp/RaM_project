@@ -7,7 +7,7 @@ import { logger } from "@hono/hono/logger";
 
 export const env = getEnv();
 const corsOptions = {
-  origin: [env.FRONTEND_URL],
+  origin: "*",
   allowHeaders: ["authorization", "x-client-info", "apikey", "content-type"],
   allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
