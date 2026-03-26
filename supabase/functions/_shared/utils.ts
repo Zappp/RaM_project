@@ -74,7 +74,6 @@ export function handleRouteError(error: unknown) {
     const { status, message } = mapPostgresError(error.code);
     throw new HTTPException(status, { message: message });
   }
-
   throw new HTTPException(500, {
     message: error instanceof Error ? error.message : "Internal server error",
   });
@@ -85,14 +84,12 @@ export function getEnv() {
     SUPABASE_URL: z.url(),
     SUPABASE_ANON_KEY: z.string().trim().min(1),
     SUPABASE_SERVICE_ROLE_KEY: z.string().trim().min(1),
-    FRONTEND_URL: z.url(),
   });
 
   const rawEnv = {
     SUPABASE_URL: Deno.env.get("SUPABASE_URL"),
     SUPABASE_ANON_KEY: Deno.env.get("SUPABASE_ANON_KEY"),
     SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
-    FRONTEND_URL: Deno.env.get("FRONTEND_URL"),
   };
 
   const { success, error, data } = envSchema.safeParse(rawEnv);
