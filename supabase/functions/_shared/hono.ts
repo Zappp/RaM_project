@@ -9,6 +9,8 @@ export const env = getEnv();
 
 const app = new Hono<AppEnv>();
 
+console.log("test deployment")
+
 app.use(logger());
 app.use(
   "*",
