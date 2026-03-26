@@ -1,10 +1,6 @@
 "server-only";
 
-import { resolve } from "node:path";
-import { config as loadEnv } from "dotenv";
 import { z } from "zod";
-
-loadEnv({ path: resolve(process.cwd(), "../.env") });
 
 const envSchema = z.object({
   SUPABASE_URL: z.url(),
@@ -14,7 +10,7 @@ const envSchema = z.object({
 function getEnv() {
   const rawEnv = {
     SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   };
 
   const result = envSchema.safeParse(rawEnv);
