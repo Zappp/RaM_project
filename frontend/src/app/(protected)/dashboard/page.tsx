@@ -2,9 +2,6 @@ import { Suspense } from "react";
 import { CharactersList } from "@/features/characters/components/CharactersList";
 import { CharactersTableSkeleton } from "@/shared/components/charactersTable/CharactersTableSkeleton";
 
-// TODO add tests (including axe for accessibility)
-// TODO add caching ( https://supabase-cache-helpers.com/postgrest/server/ )
-
 export default function DashboardPage({
   searchParams,
 }: {

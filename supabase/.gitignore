@@ -11,3 +11,4 @@
 functions/**/deno.lock
 
 .vscode
+.cursor
