@@ -3,7 +3,6 @@
     "@hono/zod-validator": "jsr:@hono/zod-validator@^0.7.6",
     "@supabase": "jsr:@supabase/supabase-js@2",
     "@hono/hono": "jsr:@hono/hono@^4.12.8",
-    "@jose": "jsr:@panva/jose@6",
     "@zod": "jsr:@zod/zod@^4.3.6",
     "shared/": "./_shared/"
   }

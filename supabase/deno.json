@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "serve:local": "npx supabase functions serve  --env-file ../.env",
+    "typegen": "npx supabase gen types typescript --local > functions/_shared/types/database.types.ts"
+  }
+}

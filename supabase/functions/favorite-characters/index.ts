@@ -10,8 +10,6 @@ import {
 import { paginationSchema } from "shared/pagination.ts";
 import { PAGINATED_PAGE_SIZE } from "shared/constants.ts";
 
-// TODO add tasks (migration add, run, regenerate types)
-
 const BASE_PATH = "/favorite-characters";
 
 app.get(

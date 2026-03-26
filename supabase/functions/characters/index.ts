@@ -21,9 +21,12 @@ app.get(
       const remote = new RemoteApiClientService(
         "https://rickandmortyapi.com/api",
       );
-      const service = new CharactersService(repo, remote);
+      const charactersService = new CharactersService(repo, remote);
 
-      const { results, pageInfo } = await service.getPage(page, pageSize);
+      const { results, pageInfo } = await charactersService.getPage(
+        page,
+        pageSize,
+      );
 
       return context.json({
         results: results.map(({ id, name, image, status, species }) => ({

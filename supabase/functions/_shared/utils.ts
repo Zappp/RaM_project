@@ -2,7 +2,6 @@ import { prettifyError, z } from "@zod";
 import { CamelizeKeys, Milliseconds, SnakeifyKeys } from "./types/utils.ts";
 import { PostgrestError } from "@supabase";
 import { PG_ERROR_MAP } from "./constants.ts";
-import { Context } from "@hono/hono";
 import { HTTPException } from "@hono/hono/http-exception";
 
 export const stringToInt = z.codec(
@@ -85,7 +84,6 @@ export function getEnv() {
     SUPABASE_URL: z.url(),
     SUPABASE_ANON_KEY: z.string().trim().min(1),
     SUPABASE_SERVICE_ROLE_KEY: z.string().trim().min(1),
-    JWT_ISSUER: z.url(),
     FRONTEND_URL: z.url(),
   });
 
@@ -93,7 +91,6 @@ export function getEnv() {
     SUPABASE_URL: Deno.env.get("SUPABASE_URL"),
     SUPABASE_ANON_KEY: Deno.env.get("SUPABASE_ANON_KEY"),
     SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
-    JWT_ISSUER: Deno.env.get("JWT_ISSUER"),
     FRONTEND_URL: Deno.env.get("FRONTEND_URL"),
   };
 

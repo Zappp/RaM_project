@@ -49,6 +49,7 @@ export async function getFavoriteCharactersByRemoteIdAction(
 
   try {
     await requireActionAuth();
+
     const { remoteIds: validatedIds } = await getFavoriteCharactersByRemoteIdSchema.parseAsync({
       remoteIds,
     });
