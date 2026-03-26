@@ -3,8 +3,8 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  SUPABASE_URL: z.url(),
-  SUPABASE_ANON_KEY: z.string().trim().min(1),
+  SUPABASE_URL: z.url().optional(),
+  SUPABASE_ANON_KEY: z.string().trim().optional(),
 });
 
 function getEnv() {
