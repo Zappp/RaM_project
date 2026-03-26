@@ -1,0 +1,33 @@
+name: Supabase Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'supabase/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -sL https://supabase.io/install/linux | sh
+          sudo mv supabase /usr/local/bin/
+
+      - name: Login to Supabase
+        run: supabase login ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Push database migrations
+        run: supabase db push --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: Deploy all Edge Functions
+        run: |
+          cd supabase/functions
+          for fn in */ ; do
+            supabase functions deploy "${fn%/}" \
+              --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+          done
