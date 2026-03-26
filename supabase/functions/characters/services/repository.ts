@@ -21,7 +21,7 @@ export class RepositoryService {
   async savePage(page: number, characters: RemoteCharacter[]) {
     const { error } = await this.supabaseAdmin
       .from("remote_characters")
-      .upsert({ remote_page: page, characters });
+      .upsert({ remote_page: page, characters }, { onConflict: "remote_page" });
 
     if (error) throw error;
   }

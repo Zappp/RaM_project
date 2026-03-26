@@ -9,13 +9,12 @@ export const env = getEnv();
 
 const app = new Hono<AppEnv>();
 
-console.log("test deployment")
 
 app.use(logger());
 app.use(
   "*",
   cors({
-    origin: [env.FRONTEND_URL],
+    origin: "*",
     allowHeaders: ["authorization", "x-client-info", "apikey", "content-type"],
     allowMethods: [
       "POST",
