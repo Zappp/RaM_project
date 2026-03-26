@@ -48,9 +48,6 @@ importers:
       autoprefixer:
         specifier: ^10.4.23
         version: 10.4.27(postcss@8.5.8)
-      dotenv:
-        specifier: ^17.2.3
-        version: 17.3.1
       postcss:
         specifier: ^8.5.6
         version: 8.5.8
@@ -538,10 +535,6 @@ packages:
   diff@4.0.4:
     resolution: {integrity: sha512-X07nttJQkwkfKfvTPG/KSnE2OMdcUCao6+eXF3wmnIQRn2aPAHH3VxDbDOdegkd6JbPsXqShpvEOHfAT+nCNwQ==}
     engines: {node: '>=0.3.1'}
-
-  dotenv@17.3.1:
-    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
-    engines: {node: '>=12'}
 
   electron-to-chromium@1.5.321:
     resolution: {integrity: sha512-L2C7Q279W2D/J4PLZLk7sebOILDSWos7bMsMNN06rK482umHUrh/3lM8G7IlHFOYip2oAg5nha1rCMxr/rs6ZQ==}
@@ -1165,8 +1158,6 @@ snapshots:
   detect-libc@2.1.2: {}
 
   diff@4.0.4: {}
-
-  dotenv@17.3.1: {}
 
   electron-to-chromium@1.5.321: {}
 
