@@ -44,8 +44,10 @@ jobs:
         with:
           deno-version: v2.x
           cache: true
-          
-          
+                    
+      - name: Format code
+        run: deno fmt
+
       - name: Backup committed DB types
         run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
 
@@ -57,7 +59,7 @@ jobs:
           cd supabase
           supabase gen types typescript --project-id $PROJECT_REF --schema public > ./functions/_shared/types/database.types.ts
 
-      - name: Check function types
+      - name: Check types
         run: |
           cd supabase/functions
           deno check
