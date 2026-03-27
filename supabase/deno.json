@@ -1,6 +1,11 @@
 {
   "tasks": {
-    "serve:local": "npx supabase functions serve --env-file .env --no-verify-jwt",
+    "serve:local": "npx supabase functions serve --no-verify-jwt",
     "typegen": "npx supabase gen types typescript --local > functions/_shared/types/database.types.ts"
+  },
+  "fmt": {
+    "exclude": [
+      "functions/_shared/types/database.types.ts"
+    ]
   }
 }
