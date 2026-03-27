@@ -31,18 +31,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: migrate
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+      - name: Cache Deno modules
+        uses: actions/cache@v3
         with:
-          version: latest
+          path: |
+            ~/.cache/deno
+          key: deno-cache-${{ hashFiles('**/deno.json') }}
+          restore-keys: |
+            deno-cache-
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - uses: denoland/setup-deno@v2
         with:
           deno-version: latest
+          cache: false
+
+      - name: Deno type check
+        run: |
+          cd supabase/functions
+          deno check
           
       - name: Backup committed DB types
         run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
