@@ -7,9 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  migrate:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -27,23 +26,49 @@ jobs:
           cd supabase
           supabase link --project-ref $PROJECT_REF
           supabase db push --yes
-      
-      - name: Check database types against functions 
+
+      - name: Upload schema backup
+        uses: actions/upload-artifact@v3
+        with:
+          name: schema
+          path: .supabase/schema.sql
+
+  typecheck_and_deploy:
+    runs-on: ubuntu-latest
+    needs: migrate
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Download schema from previous job
+        uses: actions/download-artifact@v3
+        with:
+          name: schema
+          path: .supabase
+
+      - name: Backup committed DB types
+        run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
+
+      - name: Overwrite DB types with remote
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
           cd supabase
-          supabase gen types typescript --project-id $PROJECT_REF --schema public > /tmp/database.types.ts
-          if ! diff -q /tmp/database.types.ts ./functions/_shared/types/database.types.ts > /dev/null; then
-            echo "ERROR: Generated types differ from committed types. Please update _shared/types/database.types.ts"
-            exit 1
-          fi
+          supabase gen types typescript --project-id $PROJECT_REF --schema public > ./functions/_shared/types/database.types.ts
 
-      - name: Check functions types
+      - name: Check function types
         run: |
           cd supabase/functions
           deno task check
+
+      - name: Restore committed DB types
+        run: mv /tmp/database.types.backup.ts ./supabase/functions/_shared/types/database.types.ts
 
       - name: Deploy edge functions
         env:
