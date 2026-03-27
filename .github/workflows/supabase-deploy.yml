@@ -28,7 +28,7 @@ jobs:
           supabase db push --yes
 
       - name: Upload schema backup
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: schema
           path: .supabase/schema.sql
