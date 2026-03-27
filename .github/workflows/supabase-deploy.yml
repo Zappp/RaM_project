@@ -58,7 +58,7 @@ jobs:
       - name: Check function types
         run: |
           cd supabase/functions
-          deno task check
+          deno check
 
       - name: Restore committed DB types
         run: mv /tmp/database.types.backup.ts ./supabase/functions/_shared/types/database.types.ts
