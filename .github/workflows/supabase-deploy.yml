@@ -27,6 +27,22 @@ jobs:
           cd supabase
           supabase link --project-ref $PROJECT_REF
           supabase db push --yes
+      
+      - name: Check database types against functions 
+        env:
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          cd supabase
+          supabase gen types typescript --project-id $PROJECT_REF --schema public > /tmp/database.types.ts
+          if ! diff -q /tmp/database.types.ts ./functions/_shared/types/database.types.ts > /dev/null; then
+            echo "ERROR: Generated types differ from committed types. Please update _shared/types/database.types.ts"
+            exit 1
+          fi
+
+      - name: Check functions types
+        run: |
+          cd supabase/functions
+          deno task check
 
       - name: Deploy edge functions
         env:
