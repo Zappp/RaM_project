@@ -39,6 +39,11 @@ jobs:
         with:
           version: latest
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: latest
+          
       - name: Backup committed DB types
         run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
 
