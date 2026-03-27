@@ -27,12 +27,6 @@ jobs:
           supabase link --project-ref $PROJECT_REF
           supabase db push --yes
 
-      - name: Upload schema backup
-        uses: actions/upload-artifact@v4
-        with:
-          name: schema
-          path: .supabase/schema.sql
-
   typecheck_and_deploy:
     runs-on: ubuntu-latest
     needs: migrate
@@ -44,12 +38,6 @@ jobs:
         uses: supabase/setup-cli@v1
         with:
           version: latest
-
-      - name: Download schema from previous job
-        uses: actions/download-artifact@v4
-        with:
-          name: schema
-          path: .supabase
 
       - name: Backup committed DB types
         run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
