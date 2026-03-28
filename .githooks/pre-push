@@ -10,18 +10,19 @@ fi
 
 SUPABASE_FILES=$(git diff --name-only --diff-filter=ACM $UPSTREAM...HEAD -- supabase/ | tr '\n' ' ')
 if [ -z "$SUPABASE_FILES" ]; then
-  echo "ℹ️ No Supabase files changed to push"
+  echo "No Supabase files changed"
   exit 0
 fi
 
 echo "Running deno format check..."
 deno fmt -c supabase/deno.json --unstable-sql --check $SUPABASE_FILES || {
-  echo "❌ Formatting check failed. Run 'deno task format' before pushing."
+  echo "Formatting check failed. Run 'deno task format' before pushing."
   exit 1
 }
 
 echo "Running deno type check..."
-deno check $SUPABASE_FILES || {
-  echo "❌ Type check failed. Fix errors before pushing."
+TS_FILES=$(echo "$SUPABASE_FILES" | grep '\.ts$' | tr '\n' ' ')
+deno check $TS_FILES || {
+  echo "Type check failed. Fix errors before pushing."
   exit 1
 }
