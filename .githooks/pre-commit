@@ -10,3 +10,5 @@ fi
 
 echo "Running deno format..."
 deno fmt -c supabase/deno.json --unstable-sql $SUPABASE_FILES
+
+git add $SUPABASE_FILES
