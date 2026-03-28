@@ -1,4 +1,4 @@
-name: Supabase Migration & Edge Deploy
+name: Supabase CI & Deploy
 
 on:
   push:
@@ -7,29 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  migrate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Run migrations
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-        run: |
-          cd supabase
-          supabase link --project-ref $PROJECT_REF
-          supabase db push --yes
-
   typecheck_and_deploy:
     runs-on: ubuntu-latest
-    needs: migrate
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -45,27 +24,34 @@ jobs:
           deno-version: v2.x
           cache: true
 
-      - name: Format code
+      - name: Start Supabase local development setup
         run: |
-          deno fmt --check --unstable-sql supabase
+          supabase db start
 
-      - name: Backup committed DB types
-        run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
-
-      - name: Overwrite DB types with remote
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      - name: Verify generated types are checked in
         run: |
-          cd supabase
-          supabase gen types typescript --project-id $PROJECT_REF --schema public > ./functions/_shared/types/database.types.ts
+          supabase gen types typescript --local > supabase/functions/_shared/types/database.types.ts
+          if ! git diff --ignore-space-at-eol --exit-code --quiet supabase/functions/_shared/types/database.types.ts; then
+            echo "Detected uncommitted changes after build. See status below:"
+            git diff
+            exit 1
+          fi
 
       - name: Check types
         run: |
           deno check -c supabase/functions/deno.json --lock=supabase/functions/deno.lock supabase/functions
 
-      - name: Restore committed DB types
-        run: mv /tmp/database.types.backup.ts ./supabase/functions/_shared/types/database.types.ts
+      - name: Format code
+        run: |
+          deno fmt --check --unstable-sql supabase
+
+      - name: Run migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase link --project-ref $PROJECT_REF
+          supabase db push --yes
 
       - name: Deploy edge functions
         env:
