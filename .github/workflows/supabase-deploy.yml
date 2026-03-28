@@ -16,7 +16,7 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: v2.x
 
       - name: Run migrations
         env:
@@ -37,7 +37,7 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: v2.x
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
