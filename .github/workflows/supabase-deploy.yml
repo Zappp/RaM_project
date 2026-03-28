@@ -13,6 +13,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+
+      - name: Prepare Deno cache folder
+        run: mkdir -p ~/.cache/deno
+
       - name: Cache Deno modules
         uses: actions/cache@v3
         with:
@@ -20,23 +29,20 @@ jobs:
           key: deno-${{ hashFiles('supabase/functions/deps.ts', 'supabase/functions/deno.json') }}
           restore-keys: deno-
 
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Prepare Supabase CLI folder
+        run: mkdir -p ~/.supabase
+
       - name: Cache Supabase CLI
         uses: actions/cache@v3
         with:
           path: ~/.supabase
           key: supabase-cli-${{ hashFiles('supabase/functions/deno.json') }}
           restore-keys: supabase-cli-
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-          cache: true
 
       - name: Start Supabase local development setup
         run: supabase db start
