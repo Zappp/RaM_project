@@ -1,9 +1,9 @@
-create table if not exists remote_pages (
-  id uuid primary key default gen_random_uuid(),         
-  page integer not null unique,
-  data jsonb not null,                                   
-  created_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null
+CREATE TABLE IF NOT EXISTS remote_pages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  PAGE integer NOT NULL UNIQUE,
+  data jsonb NOT NULL,
+  created_at timestamp WITH time zone DEFAULT NOW() NOT NULL,
+  updated_at timestamp WITH time zone DEFAULT NOW() NOT NULL
 );
 
-create unique index if not exists idx_remote_pages_page on remote_pages(page);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_remote_pages_page ON remote_pages(PAGE);

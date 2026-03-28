@@ -29,6 +29,6 @@ export const PG_ERROR_MAP: Record<string, PgError> = {
 
   "42501": {
     status: 401,
-    message: "Unauthorized"
-  }
+    message: "Unauthorized",
+  },
 };
