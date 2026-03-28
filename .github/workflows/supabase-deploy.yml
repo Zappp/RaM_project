@@ -1,4 +1,4 @@
-name: Supabase Backend Deploy
+name: Supabase Migration & Edge Deploy
 
 on:
   push:
@@ -46,7 +46,9 @@ jobs:
           cache: true
                     
       - name: Format code
-        run: deno fmt
+        run: | 
+          cd supabase
+          deno fmt --check --unstable-sql
 
       - name: Backup committed DB types
         run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
