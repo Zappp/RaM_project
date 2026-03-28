@@ -16,13 +16,9 @@ fi
 
 echo "Running deno format check..."
 deno fmt -c supabase/deno.json --unstable-sql --check $SUPABASE_FILES || {
-  echo "Formatting check failed. Run 'deno task format' before pushing."
+  echo "Formatting check failed. Format files before pushing."
   exit 1
 }
 
 echo "Running deno type check..."
-TS_FILES=$(echo "$SUPABASE_FILES" | grep '\.ts$' | tr '\n' ' ')
-deno check $TS_FILES || {
-  echo "Type check failed. Fix errors before pushing."
-  exit 1
-}
+deno check -c supabase/functions/deno.json supabase/functions
