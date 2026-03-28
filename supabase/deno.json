@@ -2,7 +2,8 @@
   "tasks": {
     "serve:local": "npx supabase functions serve --no-verify-jwt",
     "typegen": "npx supabase gen types typescript --local > functions/_shared/types/database.types.ts",
-    "format": "deno fmt --unstable-sql"
+    "format": "deno fmt --unstable-sql",
+    "check": "deno check -c functions/deno.json functions"
   },
   "fmt": {
     "exclude": [

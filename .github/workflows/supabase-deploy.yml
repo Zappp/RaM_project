@@ -44,11 +44,10 @@ jobs:
         with:
           deno-version: v2.x
           cache: true
-                    
+
       - name: Format code
-        run: | 
-          cd supabase
-          deno fmt --check --unstable-sql
+        run: |
+          deno fmt --check --unstable-sql supabase
 
       - name: Backup committed DB types
         run: cp ./supabase/functions/_shared/types/database.types.ts /tmp/database.types.backup.ts
@@ -63,8 +62,7 @@ jobs:
 
       - name: Check types
         run: |
-          cd supabase/functions
-          deno check
+          deno check -c supabase/functions/deno.json --lock=supabase/functions/deno.lock --frozen supabase/functions
 
       - name: Restore committed DB types
         run: mv /tmp/database.types.backup.ts ./supabase/functions/_shared/types/database.types.ts
