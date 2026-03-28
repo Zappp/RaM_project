@@ -13,6 +13,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Cache Deno modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/deno
+          key: deno-${{ hashFiles('supabase/functions/deps.ts', 'supabase/functions/deno.json') }}
+          restore-keys: deno-
+
+      - name: Cache Supabase CLI
+        uses: actions/cache@v3
+        with:
+          path: ~/.supabase
+          key: supabase-cli-${{ hashFiles('supabase/functions/deno.json') }}
+          restore-keys: supabase-cli-
+
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
@@ -25,8 +39,7 @@ jobs:
           cache: true
 
       - name: Start Supabase local development setup
-        run: |
-          supabase db start
+        run: supabase db start
 
       - name: Verify generated types are checked in
         run: |
@@ -38,12 +51,10 @@ jobs:
           fi
 
       - name: Check types
-        run: |
-          deno check -c supabase/functions/deno.json --lock=supabase/functions/deno.lock supabase/functions
+        run: deno check -c supabase/functions/deno.json --lock=supabase/functions/deno.lock supabase/functions
 
       - name: Format code
-        run: |
-          deno fmt --check --unstable-sql supabase
+        run: deno fmt --check --unstable-sql supabase
 
       - name: Run migrations
         env:
