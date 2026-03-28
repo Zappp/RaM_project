@@ -1,7 +1,6 @@
 #!/bin/sh
 
-
-echo "Running pre-commit checks for supabase..."
+echo "Running pre-commit checks for Supabase..."
 SUPABASE_FILES=$(git diff --cached --name-only --diff-filter=ACM -- supabase/)
 
 if [ -z "$SUPABASE_FILES" ]; then
@@ -9,4 +8,5 @@ if [ -z "$SUPABASE_FILES" ]; then
   exit 0
 fi
 
+echo "Running deno format..."
 deno fmt -c supabase/deno.json --unstable-sql $SUPABASE_FILES

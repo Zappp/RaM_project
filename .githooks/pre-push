@@ -1,0 +1,27 @@
+#!/bin/sh
+
+echo "Running pre-push checks for Supabase..."
+
+UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
+if [ -z "$UPSTREAM" ]; then
+    echo "No upstream found"
+    exit 1
+fi
+
+SUPABASE_FILES=$(git diff --name-only --diff-filter=ACM $UPSTREAM...HEAD -- supabase/ | tr '\n' ' ')
+if [ -z "$SUPABASE_FILES" ]; then
+  echo "ℹ️ No Supabase files changed to push"
+  exit 0
+fi
+
+echo "Running deno format check..."
+deno fmt -c supabase/deno.json --unstable-sql --check $SUPABASE_FILES || {
+  echo "❌ Formatting check failed. Run 'deno task format' before pushing."
+  exit 1
+}
+
+echo "Running deno type check..."
+deno check $SUPABASE_FILES || {
+  echo "❌ Type check failed. Fix errors before pushing."
+  exit 1
+}
