@@ -12,6 +12,11 @@ export const WithSupabase = (): MiddlewareHandler<AppEnv> => {
         global: {
           headers: { Authorization: context.req.header("Authorization") ?? "" },
         },
+        auth: {
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          persistSession: false,
+        },
       },
     );
 

@@ -12,7 +12,7 @@ export default function DashboardPage({
       <h1 className="mb-6 font-bold text-3xl text-text">Dashboard</h1>
       <div>
         <h2 className="mb-4 font-semibold text-text text-xl">Characters</h2>
-        <Suspense fallback={<CharactersTableSkeleton />}>
+        <Suspense fallback={<CharactersTableSkeleton withPagination={true} />}>
           <CharactersList searchParams={searchParams} />
         </Suspense>
       </div>
